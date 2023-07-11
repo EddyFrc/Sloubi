@@ -1,3 +1,4 @@
+import gc
 from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
@@ -7,47 +8,52 @@ from kandinsky import fill_rect, draw_string
 from ion import keydown, KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_OK
 
 
-class Player:
-    def __init__(self, x, y, speed, size, color):
-        self.x = x
-        self.y = y
-        self.speed = speed
-        self.size = size
-        self.color = color
+class Main:
+    @staticmethod
+    def game(**kwargs):
+        global _game
+        # Instanciation de tous les objets
+        _game = Game(
+            player=Player(x=kwargs["base_player_x_pos"], y=kwargs["base_player_y_pos"],
+                          speed=kwargs["base_player_speed"], size=kwargs["base_player_size"],
+                          color=kwargs["base_player_color"]),
+            obstacles=kwargs["base_obstacles"],
+            difficulty=kwargs["base_dif"],
+            speed=kwargs["base_speed"],
+            tick=kwargs["first_tick"],
+            fps=kwargs["base_fps"]
+        )
+        for i in range(2):
+            _game.obstacles.append(Util.return_obstacle(1))
+        for dif in range(_game.difficulty):
+            _game.obstacles.append(Util.return_obstacle(dif + 1))
+        # Boucle de jeu principale
+        while not _game.obstacle_player():
+            Main.game_loop()
+        Util.refresh()
+        draw_string("GAME OVER", 112, 70)
+        draw_string("Score : " + str(_game.tick), 105, 90)
+        draw_string("Difficulté initiale : " + str(_game.base_difficulty), 45, 110)
+        Util.wait_key(KEY_OK)
 
-    def edge(self):
-        if self.x + self.size > 320:
-            self.x = 320 - self.size
-        if self.x < 0:
-            self.x = 0
-        if self.y + 3 * self.size > 240:
-            self.y = 240 - 3 * self.size + 2
-        if self.y < 0:
-            self.y = 0
+    @staticmethod
+    def game_loop():
+        # Déroulement d'une frame :
+        _game.edge_bounce()  # Rebondir sur les murs
+        _game.frame_move()  # Déplacer tous les objets
+        Util.refresh()  # Rafraîchir l'écran
+        _game.show()  # Afficher tous les objets
+        _game.tick += 1
+        if _game.tick % 240 == 0:  # Augmentation de la difficulté
+            _game.difficulty += 1
+            _game.obstacles.append(Util.return_obstacle(_game.difficulty + 1))
+        sleep(_game.tick_delay)
 
-
-class Obstacle:
-    def __init__(self, x, y, direction, speed, size, color):
-        self.x = x
-        self.y = y
-        self.direction = direction
-        self.speed = speed
-        self.size = size
-        self.color = color
-
-    def edge_bounce(self):
-        if self.x + self.size >= 320 or self.x <= 0:
-            self.direction = Util.oppose_lat(self.direction)
-            if self.x < 0:
-                self.x = 0
-            elif self.x + self.size > 320:
-                self.x = 320 - self.size
-        elif self.y + 2 * self.size >= 240 or self.y <= 0:
-            self.direction = -self.direction
-            if self.y < 0:
-                self.y = 0
-            elif self.y + self.size > 240:
-                self.y = 240 - self.size
+    @staticmethod
+    def main(**kwargs):
+        while True:
+            Main.game(**kwargs)
+            Util.thanos(_game)
 
 
 class Game:
@@ -96,7 +102,57 @@ class Game:
         return False
 
 
+class Player:
+    def __init__(self, x, y, speed, size, color):
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.size = size
+        self.color = color
+
+    def edge(self):
+        if self.x + self.size > 320:
+            self.x = 320 - self.size
+        if self.x < 0:
+            self.x = 0
+        if self.y + 3 * self.size > 240:
+            self.y = 240 - 3 * self.size + 2
+        if self.y < 0:
+            self.y = 0
+
+
+class Obstacle:
+    def __init__(self, x, y, direction, speed, size, color):
+        self.x = x
+        self.y = y
+        self.direction = direction
+        self.speed = speed
+        self.size = size
+        self.color = color
+
+    def edge_bounce(self):
+        if self.x + self.size >= 320 or self.x <= 0:
+            self.direction = Util.oppose_lat(self.direction)
+            if self.x < 0:
+                self.x = 0
+            elif self.x + self.size > 320:
+                self.x = 320 - self.size
+        elif self.y + 2 * self.size >= 240 or self.y <= 0:
+            self.direction = -self.direction
+            if self.y < 0:
+                self.y = 0
+            elif self.y + self.size > 240:
+                self.y = 240 - self.size
+
+
 class Util:
+    @staticmethod
+    def wait_key(key):
+        while keydown(key):
+            pass
+        while not keydown(key):
+            pass
+
     @staticmethod
     def refresh():
         fill_rect(0, 0, 320, 240, "white")
@@ -137,7 +193,7 @@ class Util:
             return 180 - ang
 
     @staticmethod
-    def thanos(game):
+    def thanos(game):  # Pas trouvé une meilleure façon de faire ça
         del game.player.x
         del game.player.y
         del game.player.speed
@@ -156,56 +212,8 @@ class Util:
         del game.tick
         del game.tick_delay
         del game
+        gc.collect()
 
 
-class Struct:
-    @staticmethod
-    def game(**kwargs):
-        global _game
-        # Instanciation de tous les objets
-        _game = Game(
-            player=Player(x=kwargs["base_player_x_pos"], y=kwargs["base_player_y_pos"],
-                          speed=kwargs["base_player_speed"], size=kwargs["base_player_size"],
-                          color=kwargs["base_player_color"]),
-            obstacles=kwargs["base_obstacles"],
-            difficulty=kwargs["base_dif"],
-            speed=kwargs["base_speed"],
-            tick=kwargs["first_tick"],
-            fps=kwargs["base_fps"]
-        )
-        for i in range(2):
-            _game.obstacles.append(Util.return_obstacle(1))
-        for dif in range(_game.difficulty):
-            _game.obstacles.append(Util.return_obstacle(dif + 1))
-        # Boucle de jeu principale
-        while not _game.obstacle_player():
-            Struct.game_loop()
-
-    @staticmethod
-    def game_loop():
-        # Déroulement d'une frame :
-        _game.edge_bounce()  # Rebondir sur les murs
-        _game.frame_move()  # Déplacer tous les objets
-        Util.refresh()  # Rafraîchir l'écran
-        _game.show()  # Afficher tous les objets
-        _game.tick += 1
-        if _game.tick % 240 == 0:  # Augmentation de la difficulté
-            _game.difficulty += 1
-            _game.obstacles.append(Util.return_obstacle(_game.difficulty + 1))
-        sleep(_game.tick_delay)
-
-    @staticmethod
-    def main(**kwargs):
-        while True:
-            Struct.game(**kwargs)
-            Util.refresh()
-            draw_string("GAME OVER", 112, 70)
-            draw_string("Score : " + str(_game.tick), 105, 90)
-            draw_string("Difficulté initiale : " + str(_game.base_difficulty), 45, 110)
-            while not keydown(KEY_OK):
-                pass
-            Util.thanos(_game)
-
-
-Struct.main(base_player_x_pos=160.0, base_player_y_pos=120.0, base_player_speed=1.0, base_player_size=10.0,
-            base_player_color=(0, 0, 0), base_obstacles=[], base_dif=1, base_speed=1.0, first_tick=0, base_fps=40.0)
+Main.main(base_player_x_pos=160.0, base_player_y_pos=120.0, base_player_speed=1.0, base_player_size=10.0,
+          base_player_color=(0, 0, 0), base_obstacles=[], base_dif=1, base_speed=1.0, first_tick=0, base_fps=40.0)

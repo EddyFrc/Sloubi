@@ -23,4 +23,5 @@ def keydown(key):
         return is_pressed(KEYS[key])
 
 
-def get_keys(): return KEYS
+def get_keys():
+    return KEYS
