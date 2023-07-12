@@ -1,11 +1,12 @@
 import gc
-# import argparse
 from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
+# import argparse
+
+from ion import keydown, KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_OK
 
 from kandinsky import fill_rect, draw_string
-from ion import keydown, KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_OK
 
 
 class Main:
