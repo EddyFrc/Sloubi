@@ -1,1 +1,0 @@
-pyinstaller --noconfirm --onefile --windowed --icon "C:/Users/EddyF/workspaces/sloubi/graphics/icon.ico" --name "sloubi" --add-data "C:/Users/EddyF/workspaces/sloubi/src/ion.py;." --add-data "C:/Users/EddyF/workspaces/sloubi/graphics/icon.ico;." --add-data "C:/Users/EddyF/workspaces/sloubi/src/kandinsky;kandinsky/"  "C:/Users/EddyF/workspaces/sloubi/src/main.py"
