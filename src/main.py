@@ -12,8 +12,21 @@ from kandinsky import fill_rect, draw_string
 class Main:
     @staticmethod
     def main(**kwargs):
-        while True:
+        Main.container(**kwargs)
+
+    @staticmethod
+    def container(**kwargs):
+        running = True
+        while running:
+            screen = Layout.main_menu
+            Layout.print_layout(screen)
+            Util.wait_key(KEY_OK)
             Main.game(**kwargs)
+            Util.refresh()
+            draw_string("GAME OVER", 112, 70)
+            draw_string("Score : " + str(_game.tick), 105, 90)
+            draw_string("Difficulté initiale : " + str(_game.base_difficulty), 45, 110)
+            Util.wait_key(KEY_OK)
             Util.thanos(_game)
 
     @staticmethod
@@ -21,8 +34,10 @@ class Main:
         global _game
         # Instanciation de tous les objets
         _game = Game(
-            player=Player(x=kwargs["base_player_x_pos"], y=kwargs["base_player_y_pos"],
-                          speed=kwargs["base_player_speed"], size=kwargs["base_player_size"],
+            player=Player(x=kwargs["base_player_x_pos"],
+                          y=kwargs["base_player_y_pos"],
+                          speed=kwargs["base_player_speed"],
+                          size=kwargs["base_player_size"],
                           color=kwargs["base_player_color"]),
             obstacles=kwargs["base_obstacles"],
             difficulty=kwargs["base_dif"],
@@ -36,35 +51,52 @@ class Main:
         for dif in range(_game.difficulty):
             _game.obstacles.append(Util.return_obstacle(dif + 1))
         # Boucle de jeu principale
-        while not _game.obstacle_player():
-            Main.game_loop()
-        Util.refresh()
-        draw_string("GAME OVER", 112, 70)
-        draw_string("Score : " + str(_game.tick), 105, 90)
-        draw_string("Difficulté initiale : " + str(_game.base_difficulty), 45, 110)
-        Util.wait_key(KEY_OK)
+        while not _game.colliding():
+            Main.frame()
 
     @staticmethod
-    def game_loop():
+    def frame():
         # Déroulement d'une frame :
-        _game.edge_bounce()  # Rebondir sur les murs
-        _game.frame_move()  # Déplacer tous les objets
+        _game.edge_bounce_game()  # Rebondir sur les murs
+        _game.move_game()  # Déplacer tous les objets
         _game.tick += 1
         if _game.tick % 240 == 0:  # Augmentation de la difficulté
             _game.difficulty += 1
             _game.obstacles.append(Util.return_obstacle(_game.difficulty + 1))
         Util.refresh()  # Rafraîchir l'écran
-        _game.print()  # Afficher tous les objets
+        _game.print_game()  # Afficher tous les objets
         sleep(_game.tick_delay)
+
+
+class Layout:
+    main_menu = [
+        [(0, 0, 30, 10, "Jouer", True, False, False)],
+        [(20, 0, 30, 10, "Partie rapide", False, False, False)],
+        [(40, 0, 30, 10, "Options", False, False, False)],
+    ]
+
+    @staticmethod
+    def print_layout(layout):
+        for ligne in layout:
+            for colonne in ligne:
+                current = Button(colonne[0],
+                                 colonne[1],
+                                 colonne[2],
+                                 colonne[3],
+                                 colonne[4],
+                                 colonne[5],
+                                 colonne[6],
+                                 colonne[7])
+                Button.print_button(current)
+                del current
 
 
 class Button:
     """
     Bouton simple accessible par la navigation
     """
-    border_thickness = 2
 
-    def __init__(self, x, y, width, length, label, is_selected, is_active):
+    def __init__(self, x, y, width, length, label, is_selected, is_active, is_flag, border_thickness=2):
         self.x = x
         self.y = y
         self.width = width
@@ -72,17 +104,19 @@ class Button:
         self.label = label
         self.is_selected = is_selected
         self.is_active = is_active
+        self.is_flag = is_flag
+        self.border_thickness = border_thickness
 
-    def print(self):
+    def print_button(self):
         if self.is_selected:
-            fill_rect(self.x - Button.border_thickness, self.y - Button.border_thickness,
-                      self.width + Button.border_thickness, self.length + Button.border_thickness, (29, 98, 181))
+            fill_rect(self.x - self.border_thickness, self.y - self.border_thickness,
+                      self.width + self.border_thickness, self.length + self.border_thickness, (29, 98, 181))
         if self.is_active:
             color = "black"
         else:
             color = (29, 181, 103)
-        fill_rect(self.x - Button.border_thickness, self.y - Button.border_thickness,
-                  self.width + Button.border_thickness, self.length + Button.border_thickness, color)
+        fill_rect(self.x - self.border_thickness, self.y - self.border_thickness,
+                  self.width + self.border_thickness, self.length + self.border_thickness, color)
 
 
 class Game:
@@ -100,33 +134,33 @@ class Game:
         self.tick = tick
         self.tick_delay = 2.0 / (fps * 3.0)
 
-    def frame_move(self):
+    def move_game(self):
         for obstacle in self.obstacles:
-            Util.frame_move(obstacle, obstacle.direction)
+            Util.move_generic(obstacle, obstacle.direction)
         key_x = int(keydown(KEY_RIGHT)) - int(keydown(KEY_LEFT))
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))
         if not (key_x == 0 and key_y == 0):
             if key_x == 0:
-                Util.frame_move(self.player, Util.deg(asin(key_y)))
+                Util.move_generic(self.player, Util.deg(asin(key_y)))
             elif key_y == 0:
-                Util.frame_move(self.player, Util.deg(acos(key_x)))
+                Util.move_generic(self.player, Util.deg(acos(key_x)))
             elif key_y == 1:
-                Util.frame_move(self.player, (Util.deg(asin(key_y)) + Util.deg(acos(key_x))) / 2)
+                Util.move_generic(self.player, (Util.deg(asin(key_y)) + Util.deg(acos(key_x))) / 2)
             else:
-                Util.frame_move(self.player, (Util.deg(asin(key_y)) - Util.deg(acos(key_x))) / 2)
-        self.player.edge()
+                Util.move_generic(self.player, (Util.deg(asin(key_y)) - Util.deg(acos(key_x))) / 2)
+        self.player.edge_bounce_player()
 
-    def print(self):
+    def print_game(self):
         draw_string("Score : " + str(self.tick), 0, 0)
         for obstacle in self.obstacles:
-            Util.print_square(obstacle)
-        Util.print_square(self.player)
+            Util.print_generic_square(obstacle)
+        Util.print_generic_square(self.player)
 
-    def edge_bounce(self):
+    def edge_bounce_game(self):
         for obstacle in self.obstacles:
-            obstacle.edge_bounce()
+            obstacle.edge_bounce_obstacle()
 
-    def obstacle_player(self):
+    def colliding(self):
         for obstacle in self.obstacles:
             for coin in [(0, 0), (0, 1), (1, 0), (1, 1)]:
                 if obstacle.x <= self.player.x + coin[0] * self.player.size <= obstacle.x + obstacle.size \
@@ -147,7 +181,7 @@ class Player:
         self.size = size
         self.color = color
 
-    def edge(self):
+    def edge_bounce_player(self):
         if self.x + self.size > 320:
             self.x = 320 - self.size
         if self.x < 0:
@@ -171,7 +205,7 @@ class Obstacle:
         self.size = size
         self.color = color
 
-    def edge_bounce(self):
+    def edge_bounce_obstacle(self):
         if self.x + self.size >= 320 or self.x <= 0:
             self.direction = Util.oppose_lat(self.direction)
             if self.x < 0:
@@ -218,11 +252,11 @@ class Util:
                         )
 
     @staticmethod
-    def print_square(obj):
+    def print_generic_square(obj):
         fill_rect(int(obj.x), int(obj.y), int(obj.size), int(obj.size), obj.color)
 
     @staticmethod
-    def frame_move(obj, direction):
+    def move_generic(obj, direction):
         obj.x += cos(Util.rad(direction)) * obj.speed * 3
         obj.y += sin(Util.rad(direction)) * obj.speed * 3
 
@@ -234,22 +268,26 @@ class Util:
             return 180 - ang
 
     @staticmethod
-    def thanos(game):  # Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
-        del game.player.x
-        del game.player.y
-        del game.player.speed
-        del game.player.size
-        del game.player
-        while len(game.obstacles) > 0:
-            del game.obstacles[0]
-        del game.obstacles
-        del game.difficulty
-        del game.base_difficulty
-        del game.speed
-        del game.fps
-        del game.tick
-        del game.tick_delay
-        del game
+    def thanos(what_to_thanos):  # Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
+        if type(what_to_thanos) == list:
+            while len(what_to_thanos) > 0:
+                del what_to_thanos[0]
+        else:
+            del what_to_thanos.player.x
+            del what_to_thanos.player.y
+            del what_to_thanos.player.speed
+            del what_to_thanos.player.size
+            del what_to_thanos.player
+            while len(what_to_thanos.obstacles) > 0:
+                del what_to_thanos.obstacles[0]
+            del what_to_thanos.obstacles
+            del what_to_thanos.difficulty
+            del what_to_thanos.base_difficulty
+            del what_to_thanos.speed
+            del what_to_thanos.fps
+            del what_to_thanos.tick
+            del what_to_thanos.tick_delay
+            del what_to_thanos
         gc.collect()
 
 
