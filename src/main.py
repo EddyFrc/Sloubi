@@ -78,16 +78,16 @@ class Layout:
     @staticmethod
     def print_layout(layout):
         for ligne in layout:
-            for colonne in ligne:
-                current = Button(colonne[0],
-                                 colonne[1],
-                                 colonne[2],
-                                 colonne[3],
-                                 colonne[4],
-                                 colonne[5],
-                                 colonne[6],
-                                 colonne[7])
-                Button.print_button(current)
+            for element in ligne:
+                current = Button(element[0],
+                                 element[1],
+                                 element[2],
+                                 element[3],
+                                 element[4],
+                                 element[5],
+                                 element[6],
+                                 element[7])
+                current.print_button()
                 del current
 
 
@@ -109,14 +109,16 @@ class Button:
 
     def print_button(self):
         if self.is_selected:
-            fill_rect(self.x - self.border_thickness, self.y - self.border_thickness,
-                      self.width + self.border_thickness, self.length + self.border_thickness, (29, 98, 181))
+            fill_rect(Util.limite_sol(self.x - self.border_thickness), Util.limite_sol(self.y - self.border_thickness),
+                      Util.limite_plafond(self.width + self.border_thickness, "COMBIENLECRANFAITENLARGEUR(X)"),
+                      Util.limite_plafond(self.length + self.border_thickness), (29, 98, 181))
         if self.is_active:
             color = "black"
         else:
             color = (29, 181, 103)
         fill_rect(self.x - self.border_thickness, self.y - self.border_thickness,
                   self.width + self.border_thickness, self.length + self.border_thickness, color)
+        draw_string(self.label)
 
 
 class Game:
@@ -221,6 +223,19 @@ class Obstacle:
 
 
 class Util:
+
+    @staticmethod
+    def limite_sol(nombre, limite=0):
+        if nombre < limite:
+            return limite
+        return nombre
+
+    @staticmethod
+    def limite_plafond(nombre, limite):
+        if nombre > limite:
+            return limite
+        return nombre
+
     @staticmethod
     def wait_key(key):
         while keydown(key):
