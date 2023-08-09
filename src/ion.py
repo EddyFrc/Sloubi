@@ -1,5 +1,5 @@
-from keyboard import is_pressed
 # volé sans aucune forme de respect sur github niehehehe
+from keyboard import is_pressed
 
 KEY_LEFT = 0
 KEY_UP = 1

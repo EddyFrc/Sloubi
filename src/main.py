@@ -70,9 +70,9 @@ class Main:
 
 class Layout:
     main_menu = [
-        [(0, 0, 30, 10, "Jouer", True, False, False)],
-        [(20, 0, 30, 10, "Partie rapide", False, False, False)],
-        [(40, 0, 30, 10, "Options", False, False, False)],
+        [(80, 50, 160, 36, "Jouer", True, False, False)],
+        [(80, 100, 160, 36, "Partie rapide", False, False, False)],
+        [(80, 150, 160, 36, "Options", False, False, False)],
     ]
 
     @staticmethod
@@ -109,16 +109,24 @@ class Button:
 
     def print_button(self):
         if self.is_selected:
-            fill_rect(Util.limite_sol(self.x - self.border_thickness), Util.limite_sol(self.y - self.border_thickness),
-                      Util.limite_plafond(self.width + self.border_thickness, "COMBIENLECRANFAITENLARGEUR(X)"),
-                      Util.limite_plafond(self.length + self.border_thickness), (29, 98, 181))
+            fill_rect(self.x - self.border_thickness,
+                      self.y - self.border_thickness,
+                      self.width + 2 * self.border_thickness,
+                      self.length + 2 * self.border_thickness,
+                      (29, 98, 181))
         if self.is_active:
-            color = "black"
-        else:
             color = (29, 181, 103)
-        fill_rect(self.x - self.border_thickness, self.y - self.border_thickness,
-                  self.width + self.border_thickness, self.length + self.border_thickness, color)
-        draw_string(self.label)
+        else:
+            color = "gray"
+        fill_rect(self.x,
+                  self.y,
+                  self.width,
+                  self.length,
+                  color)
+        draw_string(self.label,
+                    round(self.x + 0.5 * self.width - 5 * len(self.label)),
+                    round(self.y + 0.5 * self.length - 9),
+                    background="gray")
 
 
 class Game:
