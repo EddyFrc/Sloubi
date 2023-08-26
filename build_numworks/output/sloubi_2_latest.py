@@ -9,15 +9,15 @@ class M:
  def m(**kw):
   while True:
    M.g(**kw)
-   U.thanos(_g)
+   U.th(_g)
  @S
  def g(**kw):
   global _g
   _g=G(p=P(x=kw["x"],y=kw["y"],s=kw["bps"],i=kw["bi"],c=kw["bc"]),o=kw["bo"],d=kw["d"],s=kw["bs"],t=kw["f"],f=kw["b"])
-  for i in range(2):_g.o.append(U.return_obstacle(1))
-  for dif in range(_g.d):_g.o.append(U.return_obstacle(dif + 1))
+  for i in range(2):_g.o.append(U.ro(1))
+  for dif in range(_g.d):_g.o.append(U.ro(dif + 1))
   while not _g.op():M.l()
-  U.refresh()
+  U.re()
   draw_string("GAME OVER",112,70)
   draw_string("Score : "+str(_g.t),105, 90)
   draw_string("Difficulté initiale : "+str(_g.bd),45,110)
@@ -27,25 +27,29 @@ class M:
   _g.eb();_g.fm();_g.t+=1
   if _g.t%240==0:
    _g.d+=1
-   _g.o.append(U.return_obstacle(_g.d+1))
-  U.refresh();_g.pr();sleep(_g.td)
+   _g.o.append(U.ro(_g.d + 1))
+  U.re();_g.pr();sleep(_g.td)
 class G:
  def __init__(e,p,o,d,s,f,t):
   e.p=p;e.o=o;e.d=d;e.bd=d;e.s=s;e.f=f;e.t=t;e.td=2.0/(f*3.0)
  def fm(e):
-  for o in e.o:U.frame_move(o,o.d)
+  for o in e.o: U.fmo(o, o.d)
   key_x=int(keydown(KEY_RIGHT))-int(keydown(KEY_LEFT))
   key_y=int(keydown(KEY_DOWN))-int(keydown(KEY_UP))
   if not(key_x==0 and key_y==0):
-   if key_x==0:U.frame_move(e.p,U.deg(asin(key_y)))
-   elif key_y==0:U.frame_move(e.p,U.deg(acos(key_x)))
-   elif key_y==1:U.frame_move(e.p,(U.deg(asin(key_y))+U.deg(acos(key_x)))/2)
-   else:U.frame_move(e.p,(U.deg(asin(key_y))-U.deg(acos(key_x)))/2)
-  e.p.edge()
+   if key_x==0:
+    U.fmo(e.p, U.deg(asin(key_y)))
+   elif key_y==0:
+    U.fmo(e.p, U.deg(acos(key_x)))
+   elif key_y==1:
+    U.fmo(e.p, (U.deg(asin(key_y)) + U.deg(acos(key_x))) / 2)
+   else:
+    U.fmo(e.p, (U.deg(asin(key_y)) - U.deg(acos(key_x))) / 2)
+  e.p.e()
  def pr(e):
   draw_string("Score : " + str(e.t), 0, 0)
-  for obstacle in e.o:U.print_square(obstacle)
-  U.print_square(e.p)
+  for obstacle in e.o:U.psq(obstacle)
+  U.psq(e.p)
  def eb(e):
   for o in e.o:
    o.eb()
@@ -58,7 +62,7 @@ class G:
 class P:
  def __init__(e,x,y,s,i,c):
   e.x=x;e.y=y;e.s=s;e.i=i;e.c=c
- def edge(e):
+ def e(e):
   if e.x+e.i>320:e.x=320-e.i
   if e.x<0:e.x=0
   if e.y+3*e.i>240:e.y=240-3*e.i+2
@@ -68,7 +72,7 @@ class O:
   e.x=x;e.y=y;e.d=d;e.s=s;e.i=i;e.c=c
  def eb(e):
   if e.x+e.i>=320 or e.x<=0:
-   e.d=U.oppose_lat(e.d)
+   e.d=U.ol(e.d)
    if e.x<0:e.x=0
    elif e.x+e.i>320:e.x=320-e.i
   elif e.y+2*e.i>=240 or e.y<=0:
@@ -81,28 +85,28 @@ class U:
   while keydown(key):pass
   while not keydown(key):pass
  @S
- def refresh():fill_rect(0,0,320,240,"white")
+ def re():fill_rect(0, 0, 320, 240, "white")
  @S
  def rad(ang):return(ang*pi)/180
  @S
  def deg(ang):return(ang*180)/pi
  @S
- def return_obstacle(dif):
+ def ro(dif):
   if dif>=1:ts=randint(21-dif,19+dif)
   else:ts=randint(1,40)
   return O(float(randint(0,320-ts)),0.0,randint(1, 179),0.2+(20/ts),ts,(222,int(126.5+15*(ts-20)),31))
  @S
- def print_square(obj):fill_rect(int(obj.x),int(obj.y),int(obj.i),int(obj.i),obj.c)
+ def psq(obj):fill_rect(int(obj.x), int(obj.y), int(obj.i), int(obj.i), obj.c)
  @S
- def frame_move(obj,direction):
+ def fmo(obj,direction):
   obj.x+=cos(U.rad(direction))*obj.s*3
   obj.y+=sin(U.rad(direction))*obj.s*3
  @S
- def oppose_lat(ang):
+ def ol(ang):
   if ang<0:return-ang-180
   else:return 180-ang
  @S
- def thanos(g):
+ def th(g):
   del g.p.x;del g.p.y;del g.p.s;del g.p.i;del g.p
   while len(g.o)>0:del g.o[0]
   del g.o;del g.d;del g.bd;del g.s;del g.f;del g.t;del g.td;del g

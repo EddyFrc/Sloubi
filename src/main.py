@@ -12,23 +12,18 @@ from kandinsky import fill_rect, draw_string
 class Main:
     @staticmethod
     def main(**kwargs):
-        Main.container(**kwargs)
+        Main.global_container()
 
     @staticmethod
-    def container(**kwargs):
+    def global_container(**kwargs):
         running = True
         while running:
-            screen = Layout.main_menu
-            Layout.print_layout(screen)
-            Util.wait_key(KEY_OK)
-            Main.game(**kwargs)
-            Util.refresh()
-            draw_string("GAME OVER", 112, 70)
-            draw_string("Score : " + str(_game.tick), 105, 90)
-            draw_string("Difficulté initiale : " + str(_game.base_difficulty), 45, 110)
-            Util.wait_key(KEY_OK)
-            Util.thanos(_game)
 
+            if keydown(4):
+                running = False
+
+    @staticmethod
+    def generic_screen():
     @staticmethod
     def game(**kwargs):
         global _game
@@ -51,8 +46,16 @@ class Main:
         for dif in range(_game.difficulty):
             _game.obstacles.append(Util.return_obstacle(dif + 1))
         # Boucle de jeu principale
-        while not _game.colliding():
+        while not _game.is_colliding():
             Main.frame()
+
+        Util.refresh()
+        draw_string("GAME OVER", 112, 70)
+        draw_string("Score : " + str(_game.tick), 105, 90)
+        draw_string("Difficulté initiale : " + str(_game.base_difficulty), 45, 110)
+        Util.wait_key(KEY_OK)
+
+        Util.thanos(_game)
 
     @staticmethod
     def frame():
@@ -79,13 +82,7 @@ class Layout:
     def print_layout(layout):
         for ligne in layout:
             for element in ligne:
-                current = Button(element[0],
-                                 element[1],
-                                 element[2],
-                                 element[3],
-                                 element[4],
-                                 element[5],
-                                 element[6],
+                current = Button(element[0], element[1], element[2], element[3], element[4], element[5], element[6],
                                  element[7])
                 current.print_button()
                 del current
@@ -96,15 +93,18 @@ class Button:
     Bouton simple accessible par la navigation
     """
 
-    def __init__(self, x, y, width, length, label, is_selected, is_active, is_flag, border_thickness=2):
+    def __init__(self, x, y, width, length, label, command=None, sub_layout=None, is_selected=False, is_flag=False, is_active=False,
+                 border_thickness=2):
         self.x = x
         self.y = y
         self.width = width
         self.length = length
         self.label = label
+        self.command = command
+        self.sub_layout = sub_layout
         self.is_selected = is_selected
-        self.is_active = is_active
         self.is_flag = is_flag
+        self.is_active = is_active
         self.border_thickness = border_thickness
 
     def print_button(self):
@@ -170,7 +170,7 @@ class Game:
         for obstacle in self.obstacles:
             obstacle.edge_bounce_obstacle()
 
-    def colliding(self):
+    def is_colliding(self):
         for obstacle in self.obstacles:
             for coin in [(0, 0), (0, 1), (1, 0), (1, 1)]:
                 if obstacle.x <= self.player.x + coin[0] * self.player.size <= obstacle.x + obstacle.size \
