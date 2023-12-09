@@ -4,7 +4,7 @@ from random import randint
 from time import sleep
 # import argparse
 
-from ion import keydown, KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_OK
+from ion import *
 
 from kandinsky import fill_rect, draw_string
 
@@ -24,6 +24,8 @@ class Main:
 
     @staticmethod
     def generic_screen():
+        pass
+    
     @staticmethod
     def game(**kwargs):
         global _game

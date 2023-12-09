@@ -1,15 +1,26 @@
-from kandinsky import draw_string
-from ion import keydown, KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_OK
-from random import randint
+from pynput import keyboard
 
+list = []
 
-def wait_key(key):
-    while keydown(key):
-        pass
-    while not keydown(key):
-        pass
+def on_press(key):
+    list.append(key)
+    try:
+        print('alphanumeric key {0} pressed'.format(
+            key.char))
+    except AttributeError:
+        print('special key {0} pressed'.format(
+            key))
 
+def on_release(key):
+    print('{0} released'.format(
+        key))
+    if key == keyboard.Key.esc:
+        # Stop listener
+        return False
 
-draw_string(chr(randint(97, 122)), 0, 0, "blue", "black")
-draw_string("sloubi2", 10, 18, "green", "red")
-wait_key(KEY_OK)
+# Collect events until released
+with keyboard.Listener(
+        on_press=on_press,
+        on_release=on_release) as listener:
+    listener.join()
+    
