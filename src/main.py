@@ -18,6 +18,8 @@ class Main:
         gc.enable()
         running = True
         while running:
+            # Layout.print_layout(Layout.MAIN_MENU)
+            # Util.wait_key(4)
             if keydown(37): # 37 correspond à la touche 5 sur la numworks
                 running = False
     
@@ -127,21 +129,19 @@ class Layout:
             Button(
                 80, 80, DEFAULT_WIDTH, DEFAULT_LENGTH,
                 "Jouer",
-                True, False, False
+                is_selected=True
             )
         ],
         [
             Button(
                 80, 125, DEFAULT_WIDTH, DEFAULT_LENGTH,
-                "Partie rapide",
-                False, False, False
+                "Partie rapide"
             )
         ],
         [
             Button(
                 80, 170, DEFAULT_WIDTH, DEFAULT_LENGTH,
-                "Options",
-                False, False, False
+                "Options"
             )
         ],
     ]

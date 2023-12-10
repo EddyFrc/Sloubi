@@ -30,11 +30,15 @@ def on_press(key):
         pressed_keys[KEYS.index(key.name)] = True
     except AttributeError:
         pass
+    except ValueError:
+        pass
 
 def on_release(key):
     try:
         pressed_keys[KEYS.index(key.name)] = False
     except AttributeError:
+        pass
+    except ValueError:
         pass
 
 listener = keyboard.Listener(
