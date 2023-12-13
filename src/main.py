@@ -110,7 +110,7 @@ class Player:
     Le joueur
     """
 
-    def __init__(self, x, y, speed, size, color) -> None:
+    def __init__(self, x: float, y: float, speed: float, size: int, color: tuple) -> None:
         self.x = x
         self.y = y
         self.speed = speed
@@ -133,7 +133,7 @@ class Obstacle:
     Chaque objet de cette classe est un ennemi avec son propre comportement
     """
 
-    def __init__(self, x, y, direction, speed, size, color) -> None:
+    def __init__(self, x: float, y: float, direction: int | float, speed: float, size: int, color: tuple) -> None:
         self.x = x
         self.y = y
         self.direction = direction
@@ -169,7 +169,7 @@ class Game:
     Conteneur d'une partie
     """
 
-    def __init__(self, player: Player, obstacles: list, difficulty, speed, fps, tick):
+    def __init__(self, player: Player, obstacles: list, difficulty: int, speed: int | float, fps: int | float, tick: int) -> None:
         self.player = player
         self.obstacles = obstacles
         self.difficulty = difficulty
@@ -198,17 +198,17 @@ class Game:
                 move_generic(self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2)
         self.player.edge_bounce_player()
 
-    def print_game(self):
+    def print_game(self) -> None:
         draw_string("Score : " + str(self.tick), 0, 0)
         for obstacle in self.obstacles:
             print_generic_square(obstacle)
         print_generic_square(self.player)
 
-    def edge_bounce_game(self):
+    def edge_bounce_game(self) -> None:
         for obstacle in self.obstacles:
             obstacle.edge_bounce_obstacle()
 
-    def is_colliding(self):
+    def is_colliding(self) -> bool:
         for obstacle in self.obstacles:
             for coin in [(0, 0), (0, 1), (1, 0), (1, 1)]:
                 if obstacle.x <= self.player.x + coin[0] * self.player.size <= obstacle.x + obstacle.size \
@@ -291,32 +291,32 @@ def layout_behaviour(layout: list) -> None:
     """
     pass
 
-def limite_sol(nombre: int, limite=0) -> int:
+def limite_sol(nombre: int, limite: int=0) -> int:
     if nombre < limite:
         return limite
     return nombre
 
-def limite_plafond(nombre, limite):
+def limite_plafond(nombre: int, limite: int) -> int:
     if nombre > limite:
         return limite
     return nombre
 
-def wait_key(key):
+def wait_key(key: int) -> None:
     while keydown(key):
         pass
     while not keydown(key):
         pass
 
-def refresh():
+def refresh() -> None:
     fill_rect(0, 0, 320, 240, "white")
 
-def rad(ang):
+def rad(ang: int | float) -> float:
     return (ang * pi) / 180
 
-def deg(ang):
+def deg(ang: int | float) -> float:
     return (ang * 180) / pi
 
-def new_obstacle(dif):
+def new_obstacle(dif: int) -> Obstacle:
     if dif >= 1:
         temp_size = randint(21 - dif, 19 + dif)
     else:
@@ -326,20 +326,20 @@ def new_obstacle(dif):
                     (222, int(126.5 + 15 * (temp_size - 20)), 31)
                     )
 
-def print_generic_square(obj: Obstacle | Player):
+def print_generic_square(obj: Obstacle | Player) -> None:
     fill_rect(int(obj.x), int(obj.y), int(obj.size), int(obj.size), obj.color)
 
-def move_generic(obj, direction):
+def move_generic(obj: Player | Obstacle, direction: int | float) -> None:
     obj.x += cos(rad(direction)) * obj.speed * 3
     obj.y += sin(rad(direction)) * obj.speed * 3
 
-def oppose_lat(ang):
+def oppose_lat(ang: int | float) -> int | float:
     if ang < 0:
         return -ang - 180
     else:
         return 180 - ang
 
-def thanos(object):  # Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
+def thanos(object: list | Game) -> None:  # Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
     if type(object) == list:
         while len(object) > 0:
             del object[0]
