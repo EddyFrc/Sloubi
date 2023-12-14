@@ -240,14 +240,31 @@ def game(game: Game = None, **kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
+    game_setup(game, **kwargs)
+
+    # Boucle de jeu principale
+    while not game.is_colliding():
+        frame(game)
+
+    game_over(game)
+    # thanos(game)
+
+
+def create_game(**kwargs):
+    """Retourne un objet Game correspondant aux paramètres en entrée
+
+    Returns:
+        Game: l'objet Game correspondant aux paramètres en entrée
+    """
     # Instanciation de tous les objets
-    game = Game(
-        player=Player(x=kwargs["base_player_x_pos"],
-                      y=kwargs["base_player_y_pos"],
-                      speed=kwargs["base_player_speed"],
-                      size=kwargs["base_player_size"],
-                      color=kwargs["base_player_color"]
-                      ),
+    return Game(
+        player=Player(
+            x=kwargs["base_player_x_pos"],
+            y=kwargs["base_player_y_pos"],
+            speed=kwargs["base_player_speed"],
+            size=kwargs["base_player_size"],
+            color=kwargs["base_player_color"]
+        ),
         obstacles=kwargs["base_obstacles"],
         difficulty=kwargs["base_dif"],
         speed=kwargs["base_speed"],
@@ -255,24 +272,24 @@ def game(game: Game = None, **kwargs) -> None:
         fps=kwargs["base_fps"]
     )
 
-    for i in range(2):
-        game.obstacles.append(new_obstacle(1))
-    for dif in range(game.difficulty):
-        game.obstacles.append(new_obstacle(dif + 1))
-    # Boucle de jeu principale
-    while not game.is_colliding():
-        frame()
 
-    refresh()
-    draw_string("GAME OVER", 112, 70)
-    draw_string("Score : " + str(game.tick), 105, 90)
-    draw_string("Difficulté initiale : " + str(game.base_difficulty), 45, 110)
-    wait_key(KEY_OK)
+def game_setup(game: Game, **kwargs) -> None:
+    if game is None:
+        game = create_game(DEFAULT_OPTIONS)
+    else:
+        game = create_game(**kwargs)
 
-    # thanos(game)
+    dif = [0, 0].extend(range(game.difficulty))
+    for elt in dif:
+        game.obstacles.append(new_obstacle(elt + 1))
 
 
 def frame(game: Game) -> None:
+    """Fait dérouler une frame du jeu en argument
+
+    Args:
+        game (Game): le jeu à faire tourner
+    """
     # Déroulement d'une frame :
     game.edge_bounce_game()  # Rebondir sur les murs
     game.move_game()  # Déplacer tous les objets
@@ -283,6 +300,14 @@ def frame(game: Game) -> None:
     refresh()  # Rafraîchir l'écran
     game.print_game()  # Afficher tous les objets
     sleep(game.tick_delay)
+
+
+def game_over(game: Game) -> None:
+    refresh()
+    draw_string("GAME OVER", 112, 70)
+    draw_string("Score : " + str(game.tick), 105, 90)
+    draw_string("Difficulté initiale : " + str(game.base_difficulty), 45, 110)
+    wait_key(KEY_OK)
 
 
 def print_layout(layout: list) -> None:
@@ -297,6 +322,7 @@ def print_layout(layout: list) -> None:
 def layout_behaviour(layout: list) -> None:
     """
     Comportement d'une grille de boutons (= écran)
+    TODO
     """
     pass
 
