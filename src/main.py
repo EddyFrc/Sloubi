@@ -18,16 +18,16 @@ BASE_SPEED = 1.0
 FIRST_TICK = 0
 BASE_FPS = 40.0
 
-DEFAULT_OPTIONS = {"base_player_x_pos":BASE_PLAYER_X_POS, 
-                   "base_player_y_pos":BASE_PLAYER_Y_POS, 
-                   "base_player_speed":BASE_SPEED, 
-                   "base_player_size":BASE_PLAYER_SIZE, 
-                   "base_player_color":BASE_PLAYER_COLOR, 
-                   "base_obstacles":BASE_OBSTACLES, 
-                   "base_dif":BASE_DIFFICULTY, 
-                   "base_speed":BASE_SPEED, 
-                   "first_tick":FIRST_TICK,
-                   "base_fps":BASE_FPS}
+DEFAULT_OPTIONS = {"base_player_x_pos": BASE_PLAYER_X_POS,
+                   "base_player_y_pos": BASE_PLAYER_Y_POS,
+                   "base_player_speed": BASE_SPEED,
+                   "base_player_size": BASE_PLAYER_SIZE,
+                   "base_player_color": BASE_PLAYER_COLOR,
+                   "base_obstacles": BASE_OBSTACLES,
+                   "base_dif": BASE_DIFFICULTY,
+                   "base_speed": BASE_SPEED,
+                   "first_tick": FIRST_TICK,
+                   "base_fps": BASE_FPS}
 
 SCREEN_WIDTH = 320
 SCREEN_LENGTH = 222
@@ -39,11 +39,13 @@ DEFAULT_BUTTON_CENTER = round((SCREEN_WIDTH - DEFAULT_BUTTON_WIDTH) / 2)
 
 GAME = None
 
+
 class Button:
     """
     Bouton simple accessible par la navigation
     """
-    def __init__(self, x: int, y: int, width: int, length: int, label: str, command=None, sub_layout=None, is_selected: bool=False, is_flag: bool=False, is_active: bool=False, border_thickness: int=2) -> None:
+
+    def __init__(self, x: int, y: int, width: int, length: int, label: str, command=None, sub_layout=None, is_selected: bool = False, is_flag: bool = False, is_active: bool = False, border_thickness: int = 2) -> None:
         self.x = x
         self.y = y
         self.width = width
@@ -180,12 +182,13 @@ class Game:
         self.tick_delay = 2.0 / (fps * 3.0)
 
     def move_game(self) -> None:
-        # On commence par déplacer tous les obstacles 
+        # On commence par déplacer tous les obstacles
         for obstacle in self.obstacles:
             move_generic(obstacle, obstacle.direction)
 
         # Puis on déplace le joueur selon les touches sur lesquelles il appuie
-        key_x = int(keydown(KEY_RIGHT)) - int(keydown(KEY_LEFT))  # Petite astuce pour gagner du temps, merci griffpatch :)
+        # Petite astuce pour gagner du temps, merci griffpatch :)
+        key_x = int(keydown(KEY_RIGHT)) - int(keydown(KEY_LEFT))
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))  # Idem
         if not (key_x == 0 and key_y == 0):
             if key_x == 0:
@@ -193,9 +196,11 @@ class Game:
             elif key_y == 0:
                 move_generic(self.player, deg(acos(key_x)))
             elif key_y == 1:
-                move_generic(self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2)
+                move_generic(
+                    self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2)
             else:
-                move_generic(self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2)
+                move_generic(
+                    self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2)
         self.player.edge_bounce_player()
 
     def print_game(self) -> None:
@@ -222,25 +227,27 @@ def main() -> None:
     running = True
     while running:
         menu()
-        if keydown(37): # 37 correspond à la touche 5 sur la numworks
+        if keydown(37):  # 37 correspond à la touche 5 sur la numworks
             running = False
+
 
 def menu() -> None:
     print_layout(MAIN_MENU)
     wait_key(4)
 
-def game(game: Game=None, **kwargs) -> None:
+
+def game(game: Game = None, **kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
     # Instanciation de tous les objets
     game = Game(
         player=Player(x=kwargs["base_player_x_pos"],
-                        y=kwargs["base_player_y_pos"],
-                        speed=kwargs["base_player_speed"],
-                        size=kwargs["base_player_size"],
-                        color=kwargs["base_player_color"]
-        ),
+                      y=kwargs["base_player_y_pos"],
+                      speed=kwargs["base_player_speed"],
+                      size=kwargs["base_player_size"],
+                      color=kwargs["base_player_color"]
+                      ),
         obstacles=kwargs["base_obstacles"],
         difficulty=kwargs["base_dif"],
         speed=kwargs["base_speed"],
@@ -264,6 +271,7 @@ def game(game: Game=None, **kwargs) -> None:
 
     # thanos(game)
 
+
 def frame(game: Game) -> None:
     # Déroulement d'une frame :
     game.edge_bounce_game()  # Rebondir sur les murs
@@ -285,21 +293,25 @@ def print_layout(layout: list) -> None:
         for element in ligne:
             element.print_button()
 
+
 def layout_behaviour(layout: list) -> None:
     """
     Comportement d'une grille de boutons (= écran)
     """
     pass
 
-def limite_sol(nombre: int, limite: int=0) -> int:
+
+def limite_sol(nombre: int, limite: int = 0) -> int:
     if nombre < limite:
         return limite
     return nombre
+
 
 def limite_plafond(nombre: int, limite: int) -> int:
     if nombre > limite:
         return limite
     return nombre
+
 
 def wait_key(key: int) -> None:
     while keydown(key):
@@ -307,14 +319,18 @@ def wait_key(key: int) -> None:
     while not keydown(key):
         pass
 
+
 def refresh() -> None:
     fill_rect(0, 0, 320, 240, "white")
+
 
 def rad(ang: int | float) -> float:
     return (ang * pi) / 180
 
+
 def deg(ang: int | float) -> float:
     return (ang * 180) / pi
+
 
 def new_obstacle(dif: int) -> Obstacle:
     if dif >= 1:
@@ -326,12 +342,15 @@ def new_obstacle(dif: int) -> Obstacle:
                     (222, int(126.5 + 15 * (temp_size - 20)), 31)
                     )
 
+
 def print_generic_square(obj: Obstacle | Player) -> None:
     fill_rect(int(obj.x), int(obj.y), int(obj.size), int(obj.size), obj.color)
+
 
 def move_generic(obj: Player | Obstacle, direction: int | float) -> None:
     obj.x += cos(rad(direction)) * obj.speed * 3
     obj.y += sin(rad(direction)) * obj.speed * 3
+
 
 def oppose_lat(ang: int | float) -> int | float:
     if ang < 0:
@@ -339,7 +358,9 @@ def oppose_lat(ang: int | float) -> int | float:
     else:
         return 180 - ang
 
-def thanos(object: list | Game) -> None:  # Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
+
+# Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
+def thanos(object: list | Game) -> None:
     if type(object) == list:
         while len(object) > 0:
             del object[0]
@@ -360,5 +381,6 @@ def thanos(object: list | Game) -> None:  # Pas trouvé un meilleur moyen de fai
         del object.tick_delay
         del object
     gc.collect()
+
 
 main()
