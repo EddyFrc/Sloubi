@@ -39,6 +39,8 @@ DEFAULT_BUTTON_CENTER = round((SCREEN_WIDTH - DEFAULT_BUTTON_WIDTH) / 2)
 
 GAME = None
 
+RUNNING = None
+
 
 class Button:
     """
@@ -55,7 +57,7 @@ class Button:
         self.sub_layout = sub_layout
         self.is_selected = is_selected
         self.is_flag = is_flag
-        self.is_active = is_active
+        self.is_flag_active = is_active
         self.border_thickness = border_thickness
 
     def print_button(self) -> None:
@@ -68,14 +70,14 @@ class Button:
                       self.width + 2 * self.border_thickness,
                       self.length + 2 * self.border_thickness,
                       (29, 98, 181))
-        if self.is_active:
+        if self.is_flag_active:
             color = (29, 181, 103)
         else:
             color = "gray"
-        fill_rect(self.x,
-                  self.y,
-                  self.width,
-                  self.length,
+        fill_rect(round(self.x),
+                  round(self.y),
+                  round(self.width),
+                  round(self.length),
                   color)
         draw_string(self.label,
                     round(self.x + 0.5 * self.width - 5 * len(self.label)),
@@ -83,28 +85,19 @@ class Button:
                     "white",
                     "gray")
 
+    def press_button(self) -> None:
+        """Appuie sur le bouton et renvoie True s'il correspond à un sous-menu
 
-MAIN_MENU = [
-    [
-        Button(
-            DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-            "Jouer",
-            is_selected=True
-        )
-    ],
-    [
-        Button(
-            DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-            "Partie personnalisée"
-        )
-    ],
-    [
-        Button(
-            DEFAULT_BUTTON_CENTER, 170, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-            "Informations"
-        )
-    ]
-]
+        Returns:
+            bool: True si un sous-menu est rattaché au bouton
+        """
+        if self.is_flag:
+            self.is_flag_active = not self.is_flag_active
+        if self.command is not None:
+            self.command()
+        if self.sub_layout is not None:
+            return True
+        return False
 
 
 class Player:
@@ -224,16 +217,15 @@ class Game:
 
 def main() -> None:
     gc.enable()
-    running = True
-    while running:
-        menu()
+    RUNNING = True
+    while RUNNING:
+        layout_behaviour(MAIN_MENU)
         if keydown(37):  # 37 correspond à la touche 5 sur la numworks
-            running = False
+            RUNNING = False
 
 
 def menu() -> None:
-    print_layout(MAIN_MENU)
-    wait_key(4)
+    layout_behaviour(MAIN_MENU)
 
 
 def game(game: Game = None, **kwargs) -> None:
@@ -248,6 +240,35 @@ def game(game: Game = None, **kwargs) -> None:
 
     game_over(game)
     # thanos(game)
+
+
+CUSTOM_GAME_MENU = []
+
+MAIN_MENU = [
+    [
+        Button(
+            DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+            "Jouer", game,
+            is_selected=True
+        )
+    ],
+    [
+        Button(
+            DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+            "Partie personnalisée"
+        )
+    ],
+    [
+        Button(
+            DEFAULT_BUTTON_CENTER, 170, DEFAULT_BUTTON_WIDTH / 2 - 6, DEFAULT_BUTTON_LENGTH,
+            "Infos"
+        ),
+        Button(
+            SCREEN_WIDTH / 2 + 6, 170, DEFAULT_BUTTON_WIDTH / 2 - 6, DEFAULT_BUTTON_LENGTH,
+            "Quitter"
+        )
+    ]
+]
 
 
 def create_game(**kwargs):
@@ -324,7 +345,17 @@ def layout_behaviour(layout: list) -> None:
     Comportement d'une grille de boutons (= écran)
     TODO
     """
-    pass
+    print_layout(layout)
+    while not keydown(KEY_OK):
+        if keydown(KEY_DOWN):
+            for row in layout:
+                for column in row:
+                    if column.is_active:
+                        pass #TODO
+    for row in layout:
+        for column in row:
+            if column.is_active:
+                column.press_button()
 
 
 def limite_sol(nombre: int, limite: int = 0) -> int:
