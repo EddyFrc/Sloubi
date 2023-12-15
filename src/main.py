@@ -47,7 +47,7 @@ class Button:
     Bouton simple accessible par la navigation
     """
 
-    def __init__(self, x: int, y: int, width: int, length: int, label: str, command=None, sub_layout=None, is_selected: bool = False, is_flag: bool = False, is_active: bool = False, border_thickness: int = 2) -> None:
+    def __init__(self, x: int, y: int, width: int, length: int, label: str, command=None, sub_layout=None, is_selected: bool = False, is_flag: bool = False, is_active: bool = False, left: tuple = None, right: tuple = None, up: tuple = None, down: tuple = None, border_thickness: int = 2) -> None:
         self.x = x
         self.y = y
         self.width = width
@@ -58,6 +58,10 @@ class Button:
         self.is_selected = is_selected
         self.is_flag = is_flag
         self.is_flag_active = is_active
+        self.left = left
+        self.right = right
+        self.up = up
+        self.down = down
         self.border_thickness = border_thickness
 
     def print_button(self) -> None:
@@ -65,10 +69,10 @@ class Button:
         Afficher le bouton sur l'écran
         """
         if self.is_selected:
-            fill_rect(self.x - self.border_thickness,
-                      self.y - self.border_thickness,
-                      self.width + 2 * self.border_thickness,
-                      self.length + 2 * self.border_thickness,
+            fill_rect(round(self.x - self.border_thickness),
+                      round(self.y - self.border_thickness),
+                      round(self.width + 2 * self.border_thickness),
+                      round(self.length + 2 * self.border_thickness),
                       (29, 98, 181))
         if self.is_flag_active:
             color = (29, 181, 103)
@@ -232,7 +236,10 @@ def game(game: Game = None, **kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
-    game_setup(game, **kwargs)
+    if kwargs is None:
+        game_setup(game)
+    else:
+        game_setup(game, **kwargs)
 
     # Boucle de jeu principale
     while not game.is_colliding():
@@ -249,23 +256,27 @@ MAIN_MENU = [
         Button(
             DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
             "Jouer", game,
+            down=(1, 0),
             is_selected=True
         )
     ],
     [
         Button(
             DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-            "Partie personnalisée"
+            "Partie personnalisée",
+            up=(0, 0), down=(2, 0)
         )
     ],
     [
         Button(
             DEFAULT_BUTTON_CENTER, 170, DEFAULT_BUTTON_WIDTH / 2 - 6, DEFAULT_BUTTON_LENGTH,
-            "Infos"
+            "Infos",
+            up=(1, 0), right=(2, 1)
         ),
         Button(
             SCREEN_WIDTH / 2 + 6, 170, DEFAULT_BUTTON_WIDTH / 2 - 6, DEFAULT_BUTTON_LENGTH,
-            "Quitter"
+            "Quitter",
+            up=(1, 0), left=(2, 0)
         )
     ]
 ]
@@ -296,7 +307,7 @@ def create_game(**kwargs):
 
 def game_setup(game: Game, **kwargs) -> None:
     if game is None:
-        game = create_game(DEFAULT_OPTIONS)
+        game = create_game(kwargs=DEFAULT_OPTIONS)
     else:
         game = create_game(**kwargs)
 
@@ -331,32 +342,65 @@ def game_over(game: Game) -> None:
     wait_key(KEY_OK)
 
 
-def print_layout(layout: list) -> None:
+def print_layout(layout: list) -> tuple:
     """
-    Affichage de la grille de boutons donnée en argument. C'est un affichage seulement, pas de comportement
+    Affichage de la grille de boutons donnée en argument. C'est un affichage seulement, pas de comportement.
+    Retourne un tuple correspondant à la position sur la grille du bouton sélectionné.
     """
-    for ligne in layout:
-        for element in ligne:
-            element.print_button()
+    output = ()
+    for ligne in range(len(layout)):
+        for colonne in range(len(layout[ligne])):
+            current_elt = layout[ligne][colonne]
+            current_elt.print_button()
+            if current_elt.is_selected:
+                output = (ligne, colonne)
+    return output
 
 
 def layout_behaviour(layout: list) -> None:
     """
     Comportement d'une grille de boutons (= écran)
-    TODO
-    """
-    print_layout(layout)
-    while not keydown(KEY_OK):
-        if keydown(KEY_DOWN):
-            for row in layout:
-                for column in row:
-                    if column.is_active:
-                        pass #TODO
-    for row in layout:
-        for column in row:
-            if column.is_active:
-                column.press_button()
+    
 
+    Oui. Je sais. C'est dégueulasse.
+    """
+    pos = print_layout(layout)
+    current_elt = layout[pos[0]][pos[1]]
+    ok = keydown(KEY_OK)
+    down = keydown(KEY_DOWN)
+    up = keydown(KEY_DOWN)
+    left = keydown(KEY_LEFT)
+    right = keydown(KEY_RIGHT)
+
+    while not (ok or down or up or left or right):
+        ok = keydown(KEY_OK)
+        down = keydown(KEY_DOWN)
+        up = keydown(KEY_DOWN)
+        left = keydown(KEY_LEFT)
+        right = keydown(KEY_RIGHT)
+    if down and (current_elt.down is not None):
+        current_elt.is_selected = not current_elt.is_selected
+        layout[current_elt.down[0]][current_elt.down[1]].is_selected = not layout[current_elt.down[0]][current_elt.down[1]].is_selected
+    if up and (current_elt.up is not None):
+        current_elt.is_selected = current_elt.is_selected
+        layout[current_elt.up[0]][current_elt.up[1]].is_selected = not layout[current_elt.up[0]][current_elt.up[1]].is_selected
+    if left and (current_elt.left is not None):
+        current_elt.is_selected = not current_elt.is_selected
+        layout[current_elt.left[0]][current_elt.left[1]].is_selected = not layout[current_elt.left[0]][current_elt.left[1]].is_selected
+    if right and (current_elt.right is not None):
+        current_elt.is_selected = not current_elt.is_selected
+        layout[current_elt.right[0]][current_elt.right[1]].is_selected = not layout[current_elt.right[0]][current_elt.right[1]].is_selected
+    if ok:
+        for row in layout:
+            for column in row:
+                if column.is_selected:
+                    column.press_button()
+    while ok or down or up or left or right:
+        ok = keydown(KEY_OK)
+        down = keydown(KEY_DOWN)
+        up = keydown(KEY_DOWN)
+        left = keydown(KEY_LEFT)
+        right = keydown(KEY_RIGHT)
 
 def limite_sol(nombre: int, limite: int = 0) -> int:
     if nombre < limite:
