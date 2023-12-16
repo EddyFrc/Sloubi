@@ -241,7 +241,7 @@ def game(**kwargs) -> None:
     Déroulement d'une unique partie
     """
     global _game
-    
+
     if len(kwargs) == 0:
         _game = game_setup()
     else:
@@ -252,7 +252,13 @@ def game(**kwargs) -> None:
         frame(_game)
 
     game_over(_game)
-    # thanos(game)
+
+    thanos(_game)
+
+
+def stop() -> None:
+    global _running
+    _running = False
 
 
 MAIN_MENU = [
@@ -273,15 +279,32 @@ MAIN_MENU = [
         2, right=3, up=1
     ),
     Button(
-        round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_LENGTH,
-        "Quitter", exit,
+        round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH /
+                                                2 - 5), DEFAULT_BUTTON_LENGTH,
+        "Quitter", stop,
         3, 2, up=1
     )
 ]
 
 CUSTOM_GAME_MENU = []
 
-INFO_MENU = []
+INFO_MENU = [
+    Button(
+        DEFAULT_BUTTON_CENTER, 48, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        "Comment jouer", stop,
+        0, down=1
+    ),
+    Button(
+        DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        "Crédits", stop,
+        1, up=0, down=2
+    ),
+    Button(
+        DEFAULT_BUTTON_CENTER, 138, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        "Retour", 0,
+        2, up=1
+    )
+]
 
 MENUS = [
     MAIN_MENU,
@@ -323,7 +346,7 @@ def game_setup(**options) -> Game:
     dif.extend(range(game.difficulty))
     for elt in dif:
         game.obstacles.append(new_obstacle(elt + 1))
-    
+
     return game
 
 
@@ -355,11 +378,12 @@ def game_over(game: Game) -> None:
 
 def print_layout(layout: list) -> None:
     """
-    Affichage de l'écran de boutons donnée en argument. C'est un affichage seulement, pas de comportement.
+    Affichage de l'écran donné en argument. C'est un affichage seulement, pas de comportement.
     """
     refresh()
-    for button in layout:
-        button.print_button()
+    for elt in layout:
+        if type(elt) == Button:
+            elt.print_button()
 
 
 def layout_behaviour(layout: list) -> None:
@@ -393,6 +417,7 @@ def layout_behaviour(layout: list) -> None:
 
     if layout[_cursor].press_button():
         _index = layout[_cursor].target
+        _cursor = 0
     while keydown(KEY_OK):
         pass
 
@@ -455,7 +480,7 @@ def oppose_lat(ang: int | float) -> int | float:
         return 180 - ang
 
 
-# Pas trouvé un meilleur moyen de faire ça et ça prend trop de place, rip
+# L'une des plus grosses énigmes de Sloubi c'est comment ça se fait que la variable _game (ou plus généralement la variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose, rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse ci-dessous et qui prend beaucoup trop de place dans le stockage de la calculatrice (sachant que chaque caractère compte). Pourtant le garbage collector est supposé jouer son rôle, mais non. Ça pète les couilles :/
 def thanos(object: list | Game) -> None:
     if type(object) == list:
         while len(object) > 0:
@@ -466,8 +491,7 @@ def thanos(object: list | Game) -> None:
         del object.player.speed
         del object.player.size
         del object.player
-        while len(object.obstacles) > 0:
-            del object.obstacles[0]
+        thanos(object.obstacles)
         del object.obstacles
         del object.difficulty
         del object.base_difficulty
@@ -476,7 +500,6 @@ def thanos(object: list | Game) -> None:
         del object.tick
         del object.tick_delay
         del object
-    gc.collect()
 
 
 main()
