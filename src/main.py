@@ -7,10 +7,10 @@ from ion import *
 from kandinsky import *
 
 # Pour modifier les options par défaut en partie rapide, modifier ces paramètres :
-BASE_PLAYER_X_POS = 160.0
-BASE_PLAYER_Y_POS = 120.0
+BASE_PLAYER_X_POS = 160
+BASE_PLAYER_Y_POS = 120
 BASE_PLAYER_SPEED = 1.0
-BASE_PLAYER_SIZE = 10.0
+BASE_PLAYER_SIZE = 10
 BASE_PLAYER_COLOR = (0, 0, 0)
 BASE_OBSTACLES = []
 BASE_DIFFICULTY = 1
@@ -34,12 +34,15 @@ SCREEN_LENGTH = 222
 
 DEFAULT_BUTTON_WIDTH = 220
 DEFAULT_BUTTON_LENGTH = 36
-
 DEFAULT_BUTTON_CENTER = round((SCREEN_WIDTH - DEFAULT_BUTTON_WIDTH) / 2)
+BORDER_THICKNESS = 2
 
-GAME = None
 
-RUNNING = None
+global _running, _game, _cursor, _index
+_game = None
+_running = None
+_cursor = None
+_index = None
 
 
 class Button:
@@ -47,60 +50,62 @@ class Button:
     Bouton simple accessible par la navigation
     """
 
-    def __init__(self, x: int, y: int, width: int, length: int, label: str, command=None, sub_layout=None, is_selected: bool = False, is_flag: bool = False, is_active: bool = False, left: tuple = None, right: tuple = None, up: tuple = None, down: tuple = None, border_thickness: int = 2) -> None:
+    def __init__(self, x: int, y: int, width: int, length: int, label: str, target, index, left: int = None, right: int = None, up: int = None, down: int = None) -> None:
         self.x = x
         self.y = y
         self.width = width
         self.length = length
         self.label = label
-        self.command = command
-        self.sub_layout = sub_layout
-        self.is_selected = is_selected
-        self.is_flag = is_flag
-        self.is_flag_active = is_active
+        self.target = target
+        self.index = index
         self.left = left
         self.right = right
         self.up = up
         self.down = down
-        self.border_thickness = border_thickness
 
     def print_button(self) -> None:
         """
         Afficher le bouton sur l'écran
         """
-        if self.is_selected:
-            fill_rect(round(self.x - self.border_thickness),
-                      round(self.y - self.border_thickness),
-                      round(self.width + 2 * self.border_thickness),
-                      round(self.length + 2 * self.border_thickness),
-                      (29, 98, 181))
-        if self.is_flag_active:
-            color = (29, 181, 103)
-        else:
-            color = "gray"
-        fill_rect(round(self.x),
-                  round(self.y),
-                  round(self.width),
-                  round(self.length),
-                  color)
-        draw_string(self.label,
-                    round(self.x + 0.5 * self.width - 5 * len(self.label)),
-                    round(self.y + 0.5 * self.length - 9),
-                    "white",
-                    "gray")
+        if _cursor == self.index:
+            fill_rect(
+                self.x - BORDER_THICKNESS,
+                self.y - BORDER_THICKNESS,
+                self.width + 2 * BORDER_THICKNESS,
+                self.length + 2 * BORDER_THICKNESS,
+                (29, 98, 181)
+            )
 
-    def press_button(self) -> None:
-        """Appuie sur le bouton et renvoie True s'il correspond à un sous-menu
+        color = "gray"
+        if type(self.target) == bool:
+            if self.target:
+                color = (29, 181, 103)
 
-        Returns:
-            bool: True si un sous-menu est rattaché au bouton
+        fill_rect(
+            self.x,
+            self.y,
+            self.width,
+            self.length,
+            color
+        )
+        draw_string(
+            self.label,
+            round(self.x + 0.5 * self.width - 5 * len(self.label)),
+            round(self.y + 0.5 * self.length - 9),
+            "white",
+            "gray"
+        )
+
+    def press_button(self) -> bool:
         """
-        if self.is_flag:
-            self.is_flag_active = not self.is_flag_active
-        if self.command is not None:
-            self.command()
-        if self.sub_layout is not None:
+        Appuie sur le bouton
+        """
+        if type(self.target) == int:
             return True
+        elif type(self.target) == bool:
+            self.target = not self.target
+        else:
+            self.target()
         return False
 
 
@@ -221,68 +226,71 @@ class Game:
 
 def main() -> None:
     gc.enable()
-    RUNNING = True
-    while RUNNING:
-        layout_behaviour(MAIN_MENU)
+    global _cursor, _running, _index
+    _running = True
+    _cursor = 0
+    _index = 0
+    while _running:
+        layout_behaviour(MENUS[_index])
         if keydown(37):  # 37 correspond à la touche 5 sur la numworks
-            RUNNING = False
+            _running = False
 
 
-def menu() -> None:
-    layout_behaviour(MAIN_MENU)
-
-
-def game(game: Game = None, **kwargs) -> None:
+def game(**kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
-    if kwargs is None:
-        game_setup(game)
+    global _game
+    
+    if len(kwargs) == 0:
+        _game = game_setup()
     else:
-        game_setup(game, **kwargs)
+        _game = game_setup(**kwargs)
 
     # Boucle de jeu principale
-    while not game.is_colliding():
-        frame(game)
+    while not _game.is_colliding():
+        frame(_game)
 
-    game_over(game)
+    game_over(_game)
     # thanos(game)
 
 
+MAIN_MENU = [
+    Button(
+        DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        "Jouer", game,
+        0, down=1
+    ),
+    Button(
+        DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        "Partie personnalisée", 1,
+        1, up=0, down=2
+    ),
+    Button(
+        DEFAULT_BUTTON_CENTER, 170, round(
+            DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_LENGTH,
+        "Infos", 2,
+        2, right=3, up=1
+    ),
+    Button(
+        round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_LENGTH,
+        "Quitter", exit,
+        3, 2, up=1
+    )
+]
+
 CUSTOM_GAME_MENU = []
 
-MAIN_MENU = [
-    [
-        Button(
-            DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-            "Jouer", game,
-            down=(1, 0),
-            is_selected=True
-        )
-    ],
-    [
-        Button(
-            DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-            "Partie personnalisée",
-            up=(0, 0), down=(2, 0)
-        )
-    ],
-    [
-        Button(
-            DEFAULT_BUTTON_CENTER, 170, DEFAULT_BUTTON_WIDTH / 2 - 6, DEFAULT_BUTTON_LENGTH,
-            "Infos",
-            up=(1, 0), right=(2, 1)
-        ),
-        Button(
-            SCREEN_WIDTH / 2 + 6, 170, DEFAULT_BUTTON_WIDTH / 2 - 6, DEFAULT_BUTTON_LENGTH,
-            "Quitter",
-            up=(1, 0), left=(2, 0)
-        )
-    ]
+INFO_MENU = []
+
+MENUS = [
+    MAIN_MENU,
+    CUSTOM_GAME_MENU,
+    INFO_MENU
 ]
 
 
-def create_game(**kwargs):
+def create_game(**options):
     """Retourne un objet Game correspondant aux paramètres en entrée
 
     Returns:
@@ -291,29 +299,32 @@ def create_game(**kwargs):
     # Instanciation de tous les objets
     return Game(
         player=Player(
-            x=kwargs["base_player_x_pos"],
-            y=kwargs["base_player_y_pos"],
-            speed=kwargs["base_player_speed"],
-            size=kwargs["base_player_size"],
-            color=kwargs["base_player_color"]
+            x=options["base_player_x_pos"],
+            y=options["base_player_y_pos"],
+            speed=options["base_player_speed"],
+            size=options["base_player_size"],
+            color=options["base_player_color"]
         ),
-        obstacles=kwargs["base_obstacles"],
-        difficulty=kwargs["base_dif"],
-        speed=kwargs["base_speed"],
-        tick=kwargs["first_tick"],
-        fps=kwargs["base_fps"]
+        obstacles=options["base_obstacles"],
+        difficulty=options["base_dif"],
+        speed=options["base_speed"],
+        tick=options["first_tick"],
+        fps=options["base_fps"]
     )
 
 
-def game_setup(game: Game, **kwargs) -> None:
-    if game is None:
-        game = create_game(kwargs=DEFAULT_OPTIONS)
+def game_setup(**options) -> Game:
+    if len(options) == 0:
+        game = create_game(**DEFAULT_OPTIONS)
     else:
-        game = create_game(**kwargs)
+        game = create_game(**options)
 
-    dif = [0, 0].extend(range(game.difficulty))
+    dif = [0, 0]
+    dif.extend(range(game.difficulty))
     for elt in dif:
         game.obstacles.append(new_obstacle(elt + 1))
+    
+    return game
 
 
 def frame(game: Game) -> None:
@@ -342,65 +353,49 @@ def game_over(game: Game) -> None:
     wait_key(KEY_OK)
 
 
-def print_layout(layout: list) -> tuple:
+def print_layout(layout: list) -> None:
     """
-    Affichage de la grille de boutons donnée en argument. C'est un affichage seulement, pas de comportement.
-    Retourne un tuple correspondant à la position sur la grille du bouton sélectionné.
+    Affichage de l'écran de boutons donnée en argument. C'est un affichage seulement, pas de comportement.
     """
-    output = ()
-    for ligne in range(len(layout)):
-        for colonne in range(len(layout[ligne])):
-            current_elt = layout[ligne][colonne]
-            current_elt.print_button()
-            if current_elt.is_selected:
-                output = (ligne, colonne)
-    return output
+    refresh()
+    for button in layout:
+        button.print_button()
 
 
 def layout_behaviour(layout: list) -> None:
     """
-    Comportement d'une grille de boutons (= écran)
-    
-
-    Oui. Je sais. C'est dégueulasse.
+    Comportement d'un écran de boutons
     """
-    pos = print_layout(layout)
-    current_elt = layout[pos[0]][pos[1]]
-    ok = keydown(KEY_OK)
-    down = keydown(KEY_DOWN)
-    up = keydown(KEY_DOWN)
-    left = keydown(KEY_LEFT)
-    right = keydown(KEY_RIGHT)
+    global _cursor, _index
+    print_layout(layout)
 
-    while not (ok or down or up or left or right):
-        ok = keydown(KEY_OK)
-        down = keydown(KEY_DOWN)
-        up = keydown(KEY_DOWN)
-        left = keydown(KEY_LEFT)
-        right = keydown(KEY_RIGHT)
-    if down and (current_elt.down is not None):
-        current_elt.is_selected = not current_elt.is_selected
-        layout[current_elt.down[0]][current_elt.down[1]].is_selected = not layout[current_elt.down[0]][current_elt.down[1]].is_selected
-    if up and (current_elt.up is not None):
-        current_elt.is_selected = current_elt.is_selected
-        layout[current_elt.up[0]][current_elt.up[1]].is_selected = not layout[current_elt.up[0]][current_elt.up[1]].is_selected
-    if left and (current_elt.left is not None):
-        current_elt.is_selected = not current_elt.is_selected
-        layout[current_elt.left[0]][current_elt.left[1]].is_selected = not layout[current_elt.left[0]][current_elt.left[1]].is_selected
-    if right and (current_elt.right is not None):
-        current_elt.is_selected = not current_elt.is_selected
-        layout[current_elt.right[0]][current_elt.right[1]].is_selected = not layout[current_elt.right[0]][current_elt.right[1]].is_selected
-    if ok:
-        for row in layout:
-            for column in row:
-                if column.is_selected:
-                    column.press_button()
-    while ok or down or up or left or right:
-        ok = keydown(KEY_OK)
-        down = keydown(KEY_DOWN)
-        up = keydown(KEY_DOWN)
-        left = keydown(KEY_LEFT)
-        right = keydown(KEY_RIGHT)
+    while not keydown(KEY_OK):
+        if keydown(KEY_UP) and (layout[_cursor].up is not None):
+            _cursor = layout[_cursor].up
+            print_layout(layout)
+            while keydown(KEY_UP):
+                pass
+        if keydown(KEY_DOWN) and (layout[_cursor].down is not None):
+            _cursor = layout[_cursor].down
+            print_layout(layout)
+            while keydown(KEY_DOWN):
+                pass
+        if keydown(KEY_LEFT) and (layout[_cursor].left is not None):
+            _cursor = layout[_cursor].left
+            print_layout(layout)
+            while keydown(KEY_LEFT):
+                pass
+        if keydown(KEY_RIGHT) and (layout[_cursor].right is not None):
+            _cursor = layout[_cursor].right
+            print_layout(layout)
+            while keydown(KEY_RIGHT):
+                pass
+
+    if layout[_cursor].press_button():
+        _index = layout[_cursor].target
+    while keydown(KEY_OK):
+        pass
+
 
 def limite_sol(nombre: int, limite: int = 0) -> int:
     if nombre < limite:
