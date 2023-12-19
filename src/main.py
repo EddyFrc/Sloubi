@@ -550,10 +550,10 @@ def new_obstacle(dif: int) -> Obstacle:
     Returns:
         Obstacle: Obstacle correspondant à la difficulté
     """
-    if dif >= 1:
-        temp_size = randint(21 - dif, 19 + dif)
-    else:
+    if dif >= 20:
         temp_size = randint(1, 40)
+    else:
+        temp_size = randint(21 - dif, 19 + dif)
     return Obstacle(float(randint(0, 320 - temp_size)), 0.0,
                     randint(1, 179), 0.2 + (20 / temp_size), temp_size,
                     (222, int(126.5 + 15 * (temp_size - 20)), 31)
