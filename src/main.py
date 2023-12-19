@@ -12,7 +12,7 @@ BASE_PLAYER_X_POS = 160
 BASE_PLAYER_Y_POS = 120
 BASE_PLAYER_SPEED = 1.0
 BASE_PLAYER_SIZE = 10
-BASE_PLAYER_COLOR = (0, 0, 0)
+BASE_PLAYER_COLOR = "blue"
 BASE_OBSTACLES = []
 BASE_DIFFICULTY = 1
 BASE_SPEED = 1.0
@@ -611,27 +611,49 @@ MAIN_MENU = [
         3, 2, up=1
     ),
     Label(
-        130, 30, 320, "SLOUBI", "black", "white"
+        120, 30, 320, "SLOUBI 2", "black", "white"
     )
 ]
 
-CUSTOM_GAME_MENU = []
+CUSTOM_GAME_MENU = [
+    # - Slider difficulté de base
+    # - Slider vitesse du jeu
+    # - Slider vitesse du joueur
+    # - Slider taille du joueur
+    Button(
+        246, SCREEN_LENGTH - DEFAULT_BUTTON_LENGTH - 4, 70, DEFAULT_BUTTON_LENGTH,
+        "Retour", 0,
+        0
+    )
+]
 
 INFO_MENU = [
     Button(
         DEFAULT_BUTTON_CENTER, 48, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-        "Comment jouer", stop,
+        "Comment jouer", 3,
         0, down=1
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-        "Crédits", 3,
+        "Crédits", 4,
         1, up=0, down=2
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 138, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
         "Retour", 0,
         2, up=1
+    )
+]
+
+HOW_TO_PLAY = [
+    Button(
+        246, SCREEN_LENGTH - DEFAULT_BUTTON_LENGTH - 4, 70, DEFAULT_BUTTON_LENGTH,
+        "Retour", 2,
+        0
+    ),
+    Label(
+        4, 4, 312,
+        "Vous dirigez un petit carré. Le but est d'éviter les autres carrés (oranges, rouges et jaunes) qui bougent sur l'écran. Les seules commandes sont les flèches directionnelles avec lesquelles vous déplacez le carré."
     )
 ]
 
@@ -655,6 +677,7 @@ MENUS = [
     MAIN_MENU,
     CUSTOM_GAME_MENU,
     INFO_MENU,
+    HOW_TO_PLAY,
     CREDITS
 ]
 
