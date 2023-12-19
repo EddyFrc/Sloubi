@@ -46,6 +46,30 @@ _cursor = None
 _index = None
 
 # CLASSES
+class Label:
+    """
+    Texte simple qui peut être affiché sur l'écran
+    """
+
+    def __init__(self, x: int, y: int, length: int, content: str, color: str | tuple, background: str | tuple) -> None:
+        self.x = x
+        self.y = y
+        self.length = length
+        self.content = content
+        self.color = color
+        self.background = background
+    
+    def print_label(self) -> None:
+        buffer = self.content
+        y = self.y
+        while len(buffer) * 10 > self.length:
+            index = round(self.length / 10)
+            while buffer[index] != " ":
+                index -= 1
+            draw_string(buffer[0:index], self.x, y, self.color, self.background)
+            buffer = buffer[index + 1:]
+            y += 18
+        draw_string(buffer, self.x, y, self.color, self.background)
 
 
 class Button:
@@ -260,7 +284,6 @@ class Game:
         self.print_game()  # Afficher tous les objets
         sleep(self.tick_delay)
 
-
     def game_over(self) -> None:
         """
         Affiche l'écran de game over
@@ -368,6 +391,8 @@ def print_layout(layout: list) -> None:
     for elt in layout:
         if type(elt) == Button:
             elt.print_button()
+        elif type(elt) == Label:
+            elt.print_label()
 
 
 def layout_behaviour(layout: list) -> None:
@@ -584,6 +609,9 @@ MAIN_MENU = [
                                                 2 - 5), DEFAULT_BUTTON_LENGTH,
         "Quitter", stop,
         3, 2, up=1
+    ),
+    Label(
+        130, 30, 320, "SLOUBI", "black", "white"
     )
 ]
 
