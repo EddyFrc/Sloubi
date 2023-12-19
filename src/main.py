@@ -51,7 +51,7 @@ class Label:
     Texte simple qui peut être affiché sur l'écran
     """
 
-    def __init__(self, x: int, y: int, length: int, content: str, color: str | tuple, background: str | tuple) -> None:
+    def __init__(self, x: int, y: int, length: int, content: str, color: str | tuple = "black", background: str | tuple = "white") -> None:
         self.x = x
         self.y = y
         self.length = length
@@ -625,7 +625,7 @@ INFO_MENU = [
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
-        "Crédits", stop,
+        "Crédits", 3,
         1, up=0, down=2
     ),
     Button(
@@ -635,10 +635,27 @@ INFO_MENU = [
     )
 ]
 
+CREDITS = [
+    Button(
+        246, SCREEN_LENGTH - DEFAULT_BUTTON_LENGTH - 4, 70, DEFAULT_BUTTON_LENGTH,
+        "Retour", 2,
+        0
+    ),
+    Label(
+        4, 4, 312,
+        "Jeu créé par Eddy F. Inspiré à l'origine par la documentation de Godot"
+    ),
+    Label(
+        4, 76, 312,
+        "Merci à Lucas P. pour l'idée d'avoir des carrés de taille et vitesse différentes"
+    )
+]
+
 MENUS = [
     MAIN_MENU,
     CUSTOM_GAME_MENU,
-    INFO_MENU
+    INFO_MENU,
+    CREDITS
 ]
 
 main()
