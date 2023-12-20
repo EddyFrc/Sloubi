@@ -2,22 +2,24 @@ import gc
 from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
+from threading import Thread
 
 from ion import *
-from kandinsky import *
+# from kandinsky import *
+import kandinsky as k
 
 # CONSTANTES
 # Pour modifier les options par défaut en partie rapide, modifier ces constantes :
-BASE_PLAYER_X_POS = 160
-BASE_PLAYER_Y_POS = 120
+BASE_PLAYER_X_POS = 160.0
+BASE_PLAYER_Y_POS = 120.0
 BASE_PLAYER_SPEED = 1.0
 BASE_PLAYER_SIZE = 10
 BASE_PLAYER_COLOR = "blue"
 BASE_OBSTACLES = []
 BASE_DIFFICULTY = 1
-BASE_SPEED = 1.0
+BASE_SPEED = 2.0
 FIRST_TICK = 0
-BASE_FPS = 40.0
+BASE_FPS = 60.0
 
 DEFAULT_OPTIONS = {"base_player_x_pos": BASE_PLAYER_X_POS,
                    "base_player_y_pos": BASE_PLAYER_Y_POS,
@@ -58,7 +60,7 @@ class Label:
         self.content = content
         self.color = color
         self.background = background
-    
+
     def print_label(self) -> None:
         buffer = self.content
         y = self.y
@@ -66,10 +68,11 @@ class Label:
             index = round(self.length / 10)
             while buffer[index] != " ":
                 index -= 1
-            draw_string(buffer[0:index], self.x, y, self.color, self.background)
+            k.draw_string(buffer[0:index], self.x, y,
+                          self.color, self.background)
             buffer = buffer[index + 1:]
             y += 18
-        draw_string(buffer, self.x, y, self.color, self.background)
+        k.draw_string(buffer, self.x, y, self.color, self.background)
 
 
 class Button:
@@ -95,7 +98,7 @@ class Button:
         Afficher le bouton sur l'écran
         """
         if _cursor == self.index:
-            fill_rect(
+            k.fill_rect(
                 self.x - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS,
                 self.width + 2 * BORDER_THICKNESS,
@@ -108,14 +111,14 @@ class Button:
             if self.target:
                 color = (29, 181, 103)
 
-        fill_rect(
+        k.fill_rect(
             self.x,
             self.y,
             self.width,
             self.length,
             color
         )
-        draw_string(
+        k.draw_string(
             self.label,
             round(self.x + 0.5 * self.width - 5 * len(self.label)),
             round(self.y + 0.5 * self.length - 9),
@@ -205,15 +208,15 @@ class Game:
     Conteneur d'une partie
     """
 
-    def __init__(self, player: Player, obstacles: list, difficulty: int, speed: int | float, fps: int | float, tick: int) -> None:
+    def __init__(self, player: Player, obstacles: list, difficulty: int, speed: int | float, fps: int | float, score: int) -> None:
         self.player = player
         self.obstacles = obstacles
         self.difficulty = difficulty
         self.base_difficulty = difficulty
         self.speed = speed
         self.fps = fps
-        self.tick = tick
-        self.tick_delay = 2.0 / (fps * 3.0)
+        self.dt = 1
+        self.score = score
 
     def move_game(self) -> None:
         """
@@ -221,7 +224,7 @@ class Game:
         """
         # On commence par déplacer tous les obstacles
         for obstacle in self.obstacles:
-            move_generic(obstacle, obstacle.direction)
+            move_generic(obstacle, obstacle.direction, self.dt)
 
         # Puis on déplace le joueur selon les touches sur lesquelles il appuie
         # Petite astuce pour gagner du temps, merci griffpatch :)
@@ -229,22 +232,22 @@ class Game:
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))  # Idem
         if not (key_x == 0 and key_y == 0):
             if key_x == 0:
-                move_generic(self.player, deg(asin(key_y)))
+                move_generic(self.player, deg(asin(key_y)), self.dt)
             elif key_y == 0:
-                move_generic(self.player, deg(acos(key_x)))
+                move_generic(self.player, deg(acos(key_x)), self.dt)
             elif key_y == 1:
                 move_generic(
-                    self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2)
+                    self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt)
             else:
                 move_generic(
-                    self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2)
+                    self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2, self.dt)
         self.player.edge_bounce_player()
 
     def print_game(self) -> None:
         """
         Afficher tous les éléments de la partie
         """
-        draw_string("Score : " + str(self.tick), 0, 0)
+        k.draw_string("Score : " + str(round(self.score)), 0, 0)
         for obstacle in self.obstacles:
             print_generic_square(obstacle)
         print_generic_square(self.player)
@@ -268,30 +271,42 @@ class Game:
                         and obstacle.y <= self.player.y + coin[1] * self.player.size <= obstacle.y + obstacle.size:
                     return True
         return False
-    
-    def frame(self) -> None:
+
+    def next(self) -> None:
         """
         Fait dérouler une frame du jeu en argument
         """
         # Déroulement d'une frame :
         self.edge_bounce_game()  # Rebondir sur les murs
         self.move_game()  # Déplacer tous les objets
+        self.score += self.dt
         self.tick += 1
-        if self.tick % 240 == 0:  # Augmentation de la difficulté
+        if round(self.tick) % 240 == 0:  # Augmentation de la difficulté
             self.difficulty += 1
             self.obstacles.append(new_obstacle(self.difficulty + 1))
+        sleep(self.dt / self.fps)
+
+    def next_image(self) -> None:
         refresh()  # Rafraîchir l'écran
         self.print_game()  # Afficher tous les objets
-        sleep(self.tick_delay)
+        try:
+            k.wait_vblank()
+        except ModuleNotFoundError:
+            sleep(1 / self.fps)
+        except NameError:
+            sleep(1 / self.fps)
+        except AttributeError:
+            sleep(1 / self.fps)
 
     def game_over(self) -> None:
         """
         Affiche l'écran de game over
         """
         refresh()
-        draw_string("GAME OVER", 112, 70)
-        draw_string("Score : " + str(self.tick), 105, 90)
-        draw_string("Difficulté initiale : " + str(self.base_difficulty), 45, 110)
+        k.draw_string("GAME OVER", 112, 70)
+        k.draw_string("Score : " + str(round(self.score)), 105, 90)
+        k.draw_string("Difficulté initiale : " +
+                      str(self.base_difficulty), 45, 110)
         wait_key(KEY_OK)
 
 
@@ -303,10 +318,32 @@ def main() -> None:
     _running = True
     _cursor = 0
     _index = 0
+
     while _running:
         layout_behaviour(MENUS[_index])
         if keydown(37):  # 37 correspond à la touche 5 sur la numworks
             _running = False
+
+    try:
+        k.quit()
+    except ModuleNotFoundError:
+        pass
+    except NameError:
+        pass
+    except AttributeError:
+        pass
+
+
+def processing_thread() -> None:
+    global _game
+    while not _game.is_colliding():
+        _game.next()
+
+
+def graphic_thread() -> None:
+    global _game
+    while not _game.is_colliding():
+        _game.next_image()
 
 
 def stop() -> None:
@@ -330,15 +367,19 @@ def game(**kwargs) -> None:
         _game = game_setup(**kwargs)
 
     # Boucle de jeu principale
-    while not _game.is_colliding():
-        _game.frame()
+    processing = Thread(target=processing_thread)
+    graphic = Thread(target=graphic_thread)
+
+    processing.start()
+    graphic.start()
+    graphic.join()
 
     _game.game_over()
 
     thanos(_game)
 
 
-def create_game(**options):
+def create_game(**options) -> Game:
     """Retourne un objet Game correspondant aux paramètres en entrée
 
     Returns:
@@ -356,7 +397,7 @@ def create_game(**options):
         obstacles=options["base_obstacles"],
         difficulty=options["base_dif"],
         speed=options["base_speed"],
-        tick=options["first_tick"],
+        score=options["first_tick"],
         fps=options["base_fps"]
     )
 
@@ -439,18 +480,19 @@ def print_generic_square(obj: Obstacle | Player) -> None:
     Args:
         obj (Obstacle | Player): Element à afficher
     """
-    fill_rect(int(obj.x), int(obj.y), int(obj.size), int(obj.size), obj.color)
+    k.fill_rect(int(obj.x), int(obj.y), int(
+        obj.size), int(obj.size), obj.color)
 
 
-def move_generic(obj: Player | Obstacle, direction: int | float) -> None:
+def move_generic(obj: Player | Obstacle, direction: int | float, dt: float) -> None:
     """Déplace l'élement en argument (obstacle ou joueur) selon sa vitesse et la direction donnée en argument
 
     Args:
         obj (Player | Obstacle): Elément à déplacer
         direction (int | float): Direction dans laquelle déplacer l'objet
     """
-    obj.x += cos(rad(direction)) * obj.speed * 3
-    obj.y += sin(rad(direction)) * obj.speed * 3
+    obj.x += cos(rad(direction)) * obj.speed * dt
+    obj.y += sin(rad(direction)) * obj.speed * dt
 
 
 def wait_key(key: int) -> None:
@@ -469,7 +511,7 @@ def refresh() -> None:
     """
     Efface l'écran (remplit tout par du blanc)
     """
-    fill_rect(0, 0, 320, 240, "white")
+    k.fill_rect(0, 0, 320, 240, "white")
 
 
 def limite_sol(nombre: int, limite: int = 0) -> int:
@@ -554,8 +596,11 @@ def new_obstacle(dif: int) -> Obstacle:
         temp_size = randint(1, 40)
     else:
         temp_size = randint(21 - dif, 19 + dif)
-    return Obstacle(float(randint(0, 320 - temp_size)), 0.0,
-                    randint(1, 179), 0.2 + (20 / temp_size), temp_size,
+    return Obstacle(float(randint(0, 320 - temp_size)),
+                    0.0,
+                    randint(1, 179),
+                    0.2 + (40 / temp_size),
+                    temp_size,
                     (222, int(126.5 + 15 * (temp_size - 20)), 31)
                     )
 
@@ -582,7 +627,7 @@ def thanos(object: list | Game) -> None:
         del object.speed
         del object.fps
         del object.tick
-        del object.tick_delay
+        del object.dt
         del object
 
 

@@ -1,3 +1,3 @@
-from kandinsky import *
+from kandinsky import quit
 
-draw_string("Coucou ceci est un test", 0, 0)
+quit()
