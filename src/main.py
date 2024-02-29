@@ -8,7 +8,7 @@ from ion import *
 # from kandinsky import *
 import kandinsky as k
 
-# CONSTANTES
+### CONSTANTES
 # Pour modifier les options par défaut en partie rapide, modifier ces constantes :
 BASE_PLAYER_X_POS = 160.0
 BASE_PLAYER_Y_POS = 120.0
@@ -40,14 +40,16 @@ DEFAULT_BUTTON_LENGTH = 36
 DEFAULT_BUTTON_CENTER = round((SCREEN_WIDTH - DEFAULT_BUTTON_WIDTH) / 2)
 BORDER_THICKNESS = 2
 
-# VARIABLES CRITIQUES
-global _running, _game, _cursor, _index
+### VARIABLES CRITIQUES
+global _running, _game, _cursor, _index, _collision
 _game = None
 _running = None
 _cursor = None
 _index = None
+_collision = None
 
-# CLASSES
+### CLASSES
+# MENUS
 class Label:
     """
     Texte simple qui peut être affiché sur l'écran
@@ -80,24 +82,24 @@ class Button:
     Bouton simple accessible par la navigation
     """
 
-    def __init__(self, x: int, y: int, width: int, length: int, label: str, target, index, left: int = None, right: int = None, up: int = None, down: int = None) -> None:
+    def __init__(self, x: int, y: int, width: int, length: int, label: str, target, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
         self.x = x
         self.y = y
         self.width = width
         self.length = length
         self.label = label
         self.target = target
-        self.index = index
-        self.left = left
-        self.right = right
-        self.up = up
-        self.down = down
+        self._index = _index
+        self._left = _left
+        self._right = _right
+        self._up = _up
+        self._down = _down
 
     def print_button(self) -> None:
         """
         Afficher le bouton sur l'écran
         """
-        if _cursor == self.index:
+        if _cursor == self._index:
             k.fill_rect(
                 self.x - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS,
@@ -141,6 +143,25 @@ class Button:
         return False
 
 
+class Slider:
+    """
+    Barre de défilement accessible par la navigation (utilisée pour choisir la difficulté par exemple)
+    """
+
+    def __init__(self, x: int, y: int, length: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+        self.x = x
+        self.y = y
+        self.length = length
+        self.size = size
+        self.state = state
+        self._index = _index
+        self._left = _left
+        self._right = _right
+        self._up = _up
+        self._down = _down
+
+
+# PARTIE
 class Player:
     """
     Classe réprésentant le joueur (carré)
@@ -209,6 +230,9 @@ class Game:
     """
 
     def __init__(self, player: Player, obstacles: list, difficulty: int, speed: int | float, fps: int | float, score: int) -> None:
+        # speed = facteur de vitesse du jeu
+        # fps = rendus par secondes du thread graphique
+        # dt = facteur de correction de la vitesse du jeu
         self.player = player
         self.obstacles = obstacles
         self.difficulty = difficulty
@@ -274,17 +298,15 @@ class Game:
 
     def next(self) -> None:
         """
-        Fait dérouler une frame du jeu en argument
+        Fait dérouler un "moment" du jeu : une itération de boucle
         """
-        # Déroulement d'une frame :
-        self.edge_bounce_game()  # Rebondir sur les murs
+        self.edge_bounce_game()  # Faire rebondir les obstacles sur les murs si besoin
         self.move_game()  # Déplacer tous les objets
-        self.score += self.dt
-        self.tick += 1
-        if round(self.tick) % 240 == 0:  # Augmentation de la difficulté
+        self.score += self.dt  # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
+        if self.score / self.difficulty > 240:  # Augmentation de la difficulté
             self.difficulty += 1
             self.obstacles.append(new_obstacle(self.difficulty + 1))
-        sleep(self.dt / self.fps)
+        sleep(self.dt)
 
     def next_image(self) -> None:
         refresh()  # Rafraîchir l'écran
@@ -310,14 +332,15 @@ class Game:
         wait_key(KEY_OK)
 
 
-# FONCTIONS & PROCÉDURES
+### FONCTIONS & PROCÉDURES
 # CONTAINER
 def main() -> None:
     gc.enable()
-    global _cursor, _running, _index
+    global _cursor, _running, _index, _collision
     _running = True
     _cursor = 0
     _index = 0
+    _collision = False
 
     while _running:
         layout_behaviour(MENUS[_index])
@@ -335,14 +358,15 @@ def main() -> None:
 
 
 def processing_thread() -> None:
-    global _game
+    global _game, _collision
     while not _game.is_colliding():
         _game.next()
+    _collision = True
 
 
 def graphic_thread() -> None:
-    global _game
-    while not _game.is_colliding():
+    global _game, _collision
+    while not _collision:
         _game.next_image()
 
 
@@ -359,7 +383,7 @@ def game(**kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
-    global _game
+    global _game, _collision
 
     if len(kwargs) == 0:
         _game = game_setup()
@@ -368,15 +392,13 @@ def game(**kwargs) -> None:
 
     # Boucle de jeu principale
     processing = Thread(target=processing_thread)
-    graphic = Thread(target=graphic_thread)
-
     processing.start()
-    graphic.start()
-    graphic.join()
 
+    graphic_thread()
+    
     _game.game_over()
-
     thanos(_game)
+
 
 
 def create_game(**options) -> Game:
@@ -446,23 +468,23 @@ def layout_behaviour(layout: list) -> None:
     print_layout(layout)
 
     while not keydown(KEY_OK):
-        if keydown(KEY_UP) and (layout[_cursor].up is not None):
-            _cursor = layout[_cursor].up
+        if keydown(KEY_UP) and (layout[_cursor]._up is not None):
+            _cursor = layout[_cursor]._up
             print_layout(layout)
             while keydown(KEY_UP):
                 pass
-        if keydown(KEY_DOWN) and (layout[_cursor].down is not None):
-            _cursor = layout[_cursor].down
+        if keydown(KEY_DOWN) and (layout[_cursor]._down is not None):
+            _cursor = layout[_cursor]._down
             print_layout(layout)
             while keydown(KEY_DOWN):
                 pass
-        if keydown(KEY_LEFT) and (layout[_cursor].left is not None):
-            _cursor = layout[_cursor].left
+        if keydown(KEY_LEFT) and (layout[_cursor]._left is not None):
+            _cursor = layout[_cursor]._left
             print_layout(layout)
             while keydown(KEY_LEFT):
                 pass
-        if keydown(KEY_RIGHT) and (layout[_cursor].right is not None):
-            _cursor = layout[_cursor].right
+        if keydown(KEY_RIGHT) and (layout[_cursor]._right is not None):
+            _cursor = layout[_cursor]._right
             print_layout(layout)
             while keydown(KEY_RIGHT):
                 pass
@@ -631,29 +653,29 @@ def thanos(object: list | Game) -> None:
         del object
 
 
-# MENUS
+### MENUS
 MAIN_MENU = [
     Button(
         DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
         "Jouer", game,
-        0, down=1
+        0, _down=1
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
         "Partie personnalisée", 1,
-        1, up=0, down=2
+        1, _up=0, _down=2
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 170, round(
             DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_LENGTH,
         "Infos", 2,
-        2, right=3, up=1
+        2, _right=3, _up=1
     ),
     Button(
         round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH /
                                                 2 - 5), DEFAULT_BUTTON_LENGTH,
         "Quitter", stop,
-        3, 2, up=1
+        3, 2, _up=1
     ),
     Label(
         120, 30, 320, "SLOUBI 2", "black", "white"
@@ -676,17 +698,17 @@ INFO_MENU = [
     Button(
         DEFAULT_BUTTON_CENTER, 48, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
         "Comment jouer", 3,
-        0, down=1
+        0, _down=1
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
         "Crédits", 4,
-        1, up=0, down=2
+        1, _up=0, _down=2
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 138, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
         "Retour", 0,
-        2, up=1
+        2, _up=1
     )
 ]
 
