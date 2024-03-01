@@ -12,23 +12,23 @@ import kandinsky as k
 # Pour modifier les options par défaut en partie rapide, modifier ces constantes :
 BASE_PLAYER_X_POS = 160.0
 BASE_PLAYER_Y_POS = 120.0
-BASE_PLAYER_SPEED = 1.0
+BASE_PLAYER_SPEED = 2.0
 BASE_PLAYER_SIZE = 10
 BASE_PLAYER_COLOR = "blue"
 BASE_OBSTACLES = []
 BASE_DIFFICULTY = 1
-BASE_SPEED = 2.0
 FIRST_TICK = 0
 BASE_FPS = 60.0
+BASE_DT = 1 / BASE_FPS
 
 DEFAULT_OPTIONS = {"base_player_x_pos": BASE_PLAYER_X_POS,
                    "base_player_y_pos": BASE_PLAYER_Y_POS,
-                   "base_player_speed": BASE_SPEED,
+                   "base_player_speed": BASE_PLAYER_SPEED,
                    "base_player_size": BASE_PLAYER_SIZE,
                    "base_player_color": BASE_PLAYER_COLOR,
                    "base_obstacles": BASE_OBSTACLES,
                    "base_dif": BASE_DIFFICULTY,
-                   "base_speed": BASE_SPEED,
+                   "base_dt": BASE_DT,
                    "first_tick": FIRST_TICK,
                    "base_fps": BASE_FPS}
 
@@ -40,7 +40,9 @@ DEFAULT_BUTTON_LENGTH = 36
 DEFAULT_BUTTON_CENTER = round((SCREEN_WIDTH - DEFAULT_BUTTON_WIDTH) / 2)
 BORDER_THICKNESS = 2
 
-### VARIABLES CRITIQUES
+OBJECT_SPEED_MULTIPLIER = 50.0
+
+### VARIABLES GLOBALES CRITIQUES
 global _running, _game, _cursor, _index, _collision
 _game = None
 _running = None
@@ -229,17 +231,15 @@ class Game:
     Conteneur d'une partie
     """
 
-    def __init__(self, player: Player, obstacles: list, difficulty: int, speed: int | float, fps: int | float, score: int) -> None:
-        # speed = facteur de vitesse du jeu
+    def __init__(self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, score: int) -> None:
         # fps = rendus par secondes du thread graphique
-        # dt = facteur de correction de la vitesse du jeu
+        # dt = facteur de vitesse du jeu (moteur)
         self.player = player
         self.obstacles = obstacles
         self.difficulty = difficulty
         self.base_difficulty = difficulty
-        self.speed = speed
         self.fps = fps
-        self.dt = 1
+        self.dt = dt
         self.score = score
 
     def move_game(self) -> None:
@@ -302,7 +302,7 @@ class Game:
         """
         self.edge_bounce_game()  # Faire rebondir les obstacles sur les murs si besoin
         self.move_game()  # Déplacer tous les objets
-        self.score += self.dt  # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
+        self.score += self.dt * 10  # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
         if self.score / self.difficulty > 240:  # Augmentation de la difficulté
             self.difficulty += 1
             self.obstacles.append(new_obstacle(self.difficulty + 1))
@@ -357,7 +357,7 @@ def main() -> None:
         pass
 
 
-def processing_thread() -> None:
+def engine_thread() -> None:
     global _game, _collision
     while not _game.is_colliding():
         _game.next()
@@ -391,7 +391,7 @@ def game(**kwargs) -> None:
         _game = game_setup(**kwargs)
 
     # Boucle de jeu principale
-    processing = Thread(target=processing_thread)
+    processing = Thread(target=engine_thread, name="EngineThread")
     processing.start()
 
     graphic_thread()
@@ -418,7 +418,7 @@ def create_game(**options) -> Game:
         ),
         obstacles=options["base_obstacles"],
         difficulty=options["base_dif"],
-        speed=options["base_speed"],
+        dt=options["base_dt"],
         score=options["first_tick"],
         fps=options["base_fps"]
     )
@@ -513,8 +513,8 @@ def move_generic(obj: Player | Obstacle, direction: int | float, dt: float) -> N
         obj (Player | Obstacle): Elément à déplacer
         direction (int | float): Direction dans laquelle déplacer l'objet
     """
-    obj.x += cos(rad(direction)) * obj.speed * dt
-    obj.y += sin(rad(direction)) * obj.speed * dt
+    obj.x += cos(rad(direction)) * obj.speed * dt * OBJECT_SPEED_MULTIPLIER
+    obj.y += sin(rad(direction)) * obj.speed * dt * OBJECT_SPEED_MULTIPLIER
 
 
 def wait_key(key: int) -> None:
@@ -628,7 +628,7 @@ def new_obstacle(dif: int) -> Obstacle:
 
 
 def thanos(object: list | Game) -> None:
-    """L'une des plus grosses énigmes de Sloubi c'est comment ça se fait que la variable _game (ou plus généralement la variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose, rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse qui prend beaucoup trop de place dans le stockage de la calculatrice (sachant que chaque caractère compte). Pourtant le garbage collector est supposé jouer son rôle, mais non. Ça pète les couilles :/
+    """L'une des plus grosses énigmes ici c'est comment ça se fait que la variable _game (ou plus généralement la variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose, rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse qui prend beaucoup trop de place dans le stockage de la calculatrice (sachant que chaque caractère compte). Pourtant le garbage collector est supposé jouer son rôle, mais non. Ça pète les couilles :/
 
     Args:
         object (list | Game): L'élément à supprimer
@@ -646,10 +646,9 @@ def thanos(object: list | Game) -> None:
         del object.obstacles
         del object.difficulty
         del object.base_difficulty
-        del object.speed
         del object.fps
-        del object.tick
         del object.dt
+        del object.score
         del object
 
 

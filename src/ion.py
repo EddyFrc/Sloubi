@@ -1,4 +1,5 @@
 from pynput import keyboard
+from threading import Thread, current_thread
 
 KEY_LEFT = 0
 KEY_UP = 1
@@ -43,5 +44,6 @@ def on_release(key):
 
 listener = keyboard.Listener(
     on_press=on_press,
-    on_release=on_release)
+    on_release=on_release
+)
 listener.start()

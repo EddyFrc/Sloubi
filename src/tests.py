@@ -2,10 +2,9 @@ from kandinsky import *
 from ion import *
 from time import sleep
 
-fill_rect(0, 0, 40, 40, "white")
-
-if keydown(KEY_DOWN):
-    fill_rect(0, 0, 40, 40, "blue")
-    sleep(4)
+for y in range(20):
+    for i in range(20):
+        fill_rect(i * 10, y * 10, 10, 10, (i * 12, 250 - i * 12, y * 12))
+        sleep(1 / 60.0)
 
 quit()
