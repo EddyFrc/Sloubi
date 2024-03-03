@@ -1,4 +1,3 @@
-import gc
 from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
@@ -180,12 +179,12 @@ class Player:
         """
         S'assure que le joueur ne puisse pas sortir des limites de l'écran
         """
-        if self.x + self.size > 320:
-            self.x = 320 - self.size
+        if self.x + self.size > SCREEN_WIDTH:
+            self.x = SCREEN_WIDTH - self.size
         if self.x < 0:
             self.x = 0
-        if self.y + 3 * self.size > 240:
-            self.y = 240 - 3 * self.size + 2
+        if self.y + self.size > SCREEN_LENGTH:
+            self.y = SCREEN_LENGTH - self.size
         if self.y < 0:
             self.y = 0
 
@@ -208,22 +207,22 @@ class Obstacle:
         Fait rebondir l'obstacle s'il touche un rebord de l'écran, en modifiant la direction de celui-ci
         """
         # Deux cas principaux :
-        if self.x + self.size >= 320 or self.x <= 0:
+        if self.x + self.size >= SCREEN_WIDTH or self.x <= 0:
             # Changement de direction
             self.direction = oppose_lat(self.direction)
             # Si l'obstacle est au delà du rebord, le décaler pour éviter qu'il se coince
             if self.x < 0:
                 self.x = 0
-            elif self.x + self.size > 320:
-                self.x = 320 - self.size
-        elif self.y + 2 * self.size >= 240 or self.y <= 0:
+            elif self.x + self.size > SCREEN_WIDTH:
+                self.x = SCREEN_WIDTH - self.size
+        elif self.y + self.size >= SCREEN_LENGTH or self.y <= 0:
             # Changement de direction
             self.direction = -self.direction
             # Si l'obstacle est au delà du rebord, le décaler pour éviter qu'il se coince
             if self.y < 0:
                 self.y = 0
-            elif self.y + self.size > 240:
-                self.y = 240 - self.size
+            elif self.y + self.size > SCREEN_LENGTH:
+                self.y = SCREEN_LENGTH - self.size
 
 
 class Game:
@@ -302,7 +301,7 @@ class Game:
         """
         self.edge_bounce_game()  # Faire rebondir les obstacles sur les murs si besoin
         self.move_game()  # Déplacer tous les objets
-        self.score += self.dt * 10  # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
+        self.score += self.dt * 30  # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
         if self.score / self.difficulty > 240:  # Augmentation de la difficulté
             self.difficulty += 1
             self.obstacles.append(new_obstacle(self.difficulty + 1))
@@ -335,12 +334,10 @@ class Game:
 ### FONCTIONS & PROCÉDURES
 # CONTAINER
 def main() -> None:
-    gc.enable()
-    global _cursor, _running, _index, _collision
+    global _cursor, _running, _index
     _running = True
     _cursor = 0
     _index = 0
-    _collision = False
 
     while _running:
         layout_behaviour(MENUS[_index])
@@ -359,6 +356,7 @@ def main() -> None:
 
 def engine_thread() -> None:
     global _game, _collision
+    _collision = False
     while not _game.is_colliding():
         _game.next()
     _collision = True
