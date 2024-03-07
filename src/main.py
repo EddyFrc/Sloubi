@@ -7,7 +7,7 @@ from ion import *
 # from kandinsky import *
 import kandinsky as k
 
-### CONSTANTES
+# CONSTANTES
 # Pour modifier les options par défaut en partie rapide, modifier ces constantes :
 BASE_PLAYER_X_POS = 160.0
 BASE_PLAYER_Y_POS = 120.0
@@ -41,7 +41,7 @@ BORDER_THICKNESS = 2
 
 OBJECT_SPEED_MULTIPLIER = 50.0
 
-### VARIABLES GLOBALES CRITIQUES
+# VARIABLES GLOBALES CRITIQUES
 global _running, _game, _cursor, _index, _collision
 _game = None
 _running = None
@@ -49,22 +49,54 @@ _cursor = None
 _index = None
 _collision = None
 
-### CLASSES
+# CLASSES
+class SloubiElement(object):
+    pass
+
 # MENUS
-class Label:
+class UiElement(SloubiElement):
+    """
+    Element de menu générique
+    """
+
+    def __init__(self, x: int, y: int) -> None:
+        self.x = x
+        self.y = y
+
+    def draw(self) -> None:
+        pass
+
+
+class SelectableElement(UiElement):
+    """
+    Element de menu qu'on sélectionne au curseur
+    """
+
+    def __init__(self, x: int, y: int, _index: int, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+        super().__init__(x, y)
+        self._index = _index
+        self._left = _left
+        self._right = _right
+        self._up = _up
+        self._down = _down
+
+    def press(self) -> None:
+        pass
+
+
+class Label(UiElement):
     """
     Texte simple qui peut être affiché sur l'écran
     """
 
     def __init__(self, x: int, y: int, length: int, content: str, color: str | tuple = "black", background: str | tuple = "white") -> None:
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.length = length
         self.content = content
         self.color = color
         self.background = background
 
-    def print_label(self) -> None:
+    def draw(self) -> None:
         buffer = self.content
         y = self.y
         while len(buffer) * 10 > self.length:
@@ -78,29 +110,23 @@ class Label:
         k.draw_string(buffer, self.x, y, self.color, self.background)
 
 
-class Button:
+class Button(SelectableElement):
     """
     Bouton simple accessible par la navigation
     """
 
     def __init__(self, x: int, y: int, width: int, length: int, label: str, target, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
-        self.x = x
-        self.y = y
+        super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width
         self.length = length
         self.label = label
         self.target = target
-        self._index = _index
-        self._left = _left
-        self._right = _right
-        self._up = _up
-        self._down = _down
 
-    def print_button(self) -> None:
+    def draw(self) -> None:
         """
         Afficher le bouton sur l'écran
         """
-        if _cursor == self._index:
+        if _cursor == self._index:  # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
             k.fill_rect(
                 self.x - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS,
@@ -109,8 +135,9 @@ class Button:
                 (29, 98, 181)
             )
 
+        # Couleur principale
         color = "gray"
-        if type(self.target) == bool:
+        if type(self.target) == bool:  # Un peu obligé de faire deux if imbriqués au lieu d'un "and"
             if self.target:
                 color = (29, 181, 103)
 
@@ -121,6 +148,7 @@ class Button:
             self.length,
             color
         )
+
         k.draw_string(
             self.label,
             round(self.x + 0.5 * self.width - 5 * len(self.label)),
@@ -129,12 +157,8 @@ class Button:
             "gray"
         )
 
-    def press_button(self) -> bool:
-        """Appuyer sur le bouton
-
-        Returns:
-            bool: True si le bouton renvoie vers un autre menu (int), False sinon
-        """
+    def press(self) -> bool:
+        """Appuyer sur le bouton"""
         if type(self.target) == int:
             return True
         elif type(self.target) == bool:
@@ -144,25 +168,28 @@ class Button:
         return False
 
 
-class Slider:
+class Slider(SelectableElement):
     """
     Barre de défilement accessible par la navigation (utilisée pour choisir la difficulté par exemple)
     """
 
     def __init__(self, x: int, y: int, length: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
-        self.x = x
-        self.y = y
+        super().__init__(x, y, _index, _left, _right, _up, _down)
         self.length = length
         self.size = size
         self.state = state
-        self._index = _index
-        self._left = _left
-        self._right = _right
-        self._up = _up
-        self._down = _down
 
 
 # PARTIE
+class GameElement(SloubiElement):
+    def __init__(self, x: float, y: float) -> None:
+        self.x = x
+        self.y = y
+    
+    def edge(self) -> None:
+        pass
+        
+
 class Player:
     """
     Classe réprésentant le joueur (carré)
@@ -202,7 +229,7 @@ class Obstacle:
         self.size = size
         self.color = color
 
-    def edge_bounce_obstacle(self) -> None:
+    def edge(self) -> None:
         """
         Fait rebondir l'obstacle s'il touche un rebord de l'écran, en modifiant la direction de celui-ci
         """
@@ -225,7 +252,7 @@ class Obstacle:
                 self.y = SCREEN_LENGTH - self.size
 
 
-class Game:
+class Game(SloubiElement):
     """
     Conteneur d'une partie
     """
@@ -277,10 +304,10 @@ class Game:
 
     def edge_bounce_game(self) -> None:
         """
-        Appelle edge_bounce_obstacle pour chaque obstacle du jeu
+        Appelle edge() pour chaque obstacle du jeu
         """
         for obstacle in self.obstacles:
-            obstacle.edge_bounce_obstacle()
+            obstacle.edge()
 
     def is_colliding(self) -> bool:
         """Détermine si le joueur touche un obstacle
@@ -301,7 +328,8 @@ class Game:
         """
         self.edge_bounce_game()  # Faire rebondir les obstacles sur les murs si besoin
         self.move_game()  # Déplacer tous les objets
-        self.score += self.dt * 30  # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
+        # Plus dt est grand, plus le laps de temps est grand et par conséquent plus le score doit augmenter
+        self.score += self.dt * 30
         if self.score / self.difficulty > 240:  # Augmentation de la difficulté
             self.difficulty += 1
             self.obstacles.append(new_obstacle(self.difficulty + 1))
@@ -331,7 +359,7 @@ class Game:
         wait_key(KEY_OK)
 
 
-### FONCTIONS & PROCÉDURES
+# FONCTIONS & PROCÉDURES
 # CONTAINER
 def main() -> None:
     global _cursor, _running, _index
@@ -393,10 +421,9 @@ def game(**kwargs) -> None:
     processing.start()
 
     graphic_thread()
-    
+
     _game.game_over()
     thanos(_game)
-
 
 
 def create_game(**options) -> Game:
@@ -451,9 +478,9 @@ def print_layout(layout: list) -> None:
     refresh()
     for elt in layout:
         if type(elt) == Button:
-            elt.print_button()
+            elt.draw()
         elif type(elt) == Label:
-            elt.print_label()
+            elt.draw()
 
 
 def layout_behaviour(layout: list) -> None:
@@ -487,7 +514,7 @@ def layout_behaviour(layout: list) -> None:
             while keydown(KEY_RIGHT):
                 pass
 
-    if layout[_cursor].press_button():
+    if layout[_cursor].press():
         _index = layout[_cursor].target
         _cursor = 0
     while keydown(KEY_OK):
@@ -534,7 +561,7 @@ def refresh() -> None:
     k.fill_rect(0, 0, 320, 240, "white")
 
 
-def limite_sol(nombre: int, limite: int = 0) -> int:
+def limite_plancher(nombre: int, limite: int = 0) -> int:
     """Prévient une valeur trop petite (contrôle de valeur)
 
     Args:
@@ -616,13 +643,14 @@ def new_obstacle(dif: int) -> Obstacle:
         temp_size = randint(1, 40)
     else:
         temp_size = randint(21 - dif, 19 + dif)
-    return Obstacle(float(randint(0, 320 - temp_size)),
-                    0.0,
-                    randint(1, 179),
-                    0.2 + (40 / temp_size),
-                    temp_size,
-                    (222, int(126.5 + 15 * (temp_size - 20)), 31)
-                    )
+    return Obstacle(
+        float(randint(0, 320 - temp_size)),
+        0.0,
+        randint(1, 179),
+        0.2 + (40 / temp_size),
+        temp_size,
+        (222, int(126.5 + 15 * (temp_size - 20)), 31)
+    )
 
 
 def thanos(object: list | Game) -> None:
@@ -650,7 +678,7 @@ def thanos(object: list | Game) -> None:
         del object
 
 
-### MENUS
+# MENUS
 MAIN_MENU = [
     Button(
         DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
