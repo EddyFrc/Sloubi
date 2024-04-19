@@ -49,12 +49,8 @@ _cursor = None
 _index = None
 _collision = None
 
-# CLASSES
-class SloubiElement(object):
-    pass
-
 # MENUS
-class UiElement(SloubiElement):
+class UiElement:
     """
     Element de menu générique
     """
@@ -62,9 +58,6 @@ class UiElement(SloubiElement):
     def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
-
-    def draw(self) -> None:
-        pass
 
 
 class SelectableElement(UiElement):
@@ -79,9 +72,6 @@ class SelectableElement(UiElement):
         self._right = _right
         self._up = _up
         self._down = _down
-
-    def press(self) -> None:
-        pass
 
 
 class Label(UiElement):
@@ -175,19 +165,19 @@ class Slider(SelectableElement):
 
     def __init__(self, x: int, y: int, length: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
-        self.length = length
-        self.size = size
-        self.state = state
+        self.length = length  # attention length est la longueur en pixels utilisée à l'affichage
+        self.size = size  # ceci est le nombre de valeurs que peut prendre la barre 
+        self.state = state  # ceci est la valeur actuelle de la barre (0 <= state < size)
+    
+    def draw(self) -> None:
+        pass
 
 
 # PARTIE
-class GameElement(SloubiElement):
+class GameElement:
     def __init__(self, x: float, y: float) -> None:
         self.x = x
         self.y = y
-    
-    def edge(self) -> None:
-        pass
         
 
 class Player:
@@ -252,7 +242,7 @@ class Obstacle:
                 self.y = SCREEN_LENGTH - self.size
 
 
-class Game(SloubiElement):
+class Game:
     """
     Conteneur d'une partie
     """
