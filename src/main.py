@@ -180,14 +180,13 @@ class GameElement:
         self.y = y
         
 
-class Player:
+class Player(GameElement):
     """
     Classe réprésentant le joueur (carré)
     """
 
     def __init__(self, x: float, y: float, speed: float, size: int, color: tuple) -> None:
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.speed = speed
         self.size = size
         self.color = color
@@ -206,14 +205,13 @@ class Player:
             self.y = 0
 
 
-class Obstacle:
+class Obstacle(GameElement):
     """
     Chaque objet de cette classe est un ennemi (= carré rouge)
     """
 
     def __init__(self, x: float, y: float, direction: int | float, speed: float, size: int, color: tuple) -> None:
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.direction = direction
         self.speed = speed
         self.size = size
@@ -267,7 +265,6 @@ class Game:
             move_generic(obstacle, obstacle.direction, self.dt)
 
         # Puis on déplace le joueur selon les touches sur lesquelles il appuie
-        # Petite astuce pour gagner du temps, merci griffpatch :)
         key_x = int(keydown(KEY_RIGHT)) - int(keydown(KEY_LEFT))
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))  # Idem
         if not (key_x == 0 and key_y == 0):
@@ -303,7 +300,7 @@ class Game:
         """Détermine si le joueur touche un obstacle
 
         Returns:
-            bool: True si le joueur se superpose avec un obstacle
+            bool: True si le joueur est superposé avec un obstacle
         """
         for obstacle in self.obstacles:
             for coin in [(0, 0), (0, 1), (1, 0), (1, 1)]:
