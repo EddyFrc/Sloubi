@@ -32,12 +32,17 @@ DEFAULT_OPTIONS = {"base_player_x_pos": BASE_PLAYER_X_POS,
                    "base_fps": BASE_FPS}
 
 SCREEN_WIDTH = 320
-SCREEN_LENGTH = 222
+SCREEN_HEIGHT = 222
 
 DEFAULT_BUTTON_WIDTH = 220
-DEFAULT_BUTTON_LENGTH = 36
+DEFAULT_BUTTON_HEIGHT = 36
 DEFAULT_BUTTON_CENTER = round((SCREEN_WIDTH - DEFAULT_BUTTON_WIDTH) / 2)
 BORDER_THICKNESS = 2
+
+DEFAULT_SLIDER_HANDLE_WIDTH = 6
+DEFAULT_SLIDER_HANDLE_HEIGHT = 20
+DEFAULT_SLIDER_HEIGHT = 10
+
 
 OBJECT_SPEED_MULTIPLIER = 50.0
 
@@ -50,7 +55,7 @@ _index = None
 _collision = None
 
 # MENUS
-class UiElement:
+class GraphicalNode:
     """
     Element de menu générique
     """
@@ -60,7 +65,7 @@ class UiElement:
         self.y = y
 
 
-class SelectableElement(UiElement):
+class SelectableNode(GraphicalNode):
     """
     Element de menu qu'on sélectionne au curseur
     """
@@ -74,7 +79,7 @@ class SelectableElement(UiElement):
         self._down = _down
 
 
-class Label(UiElement):
+class Label(GraphicalNode):
     """
     Texte simple qui peut être affiché sur l'écran
     """
@@ -100,15 +105,15 @@ class Label(UiElement):
         k.draw_string(buffer, self.x, y, self.color, self.background)
 
 
-class Button(SelectableElement):
+class Button(SelectableNode):
     """
     Bouton simple accessible par la navigation
     """
 
-    def __init__(self, x: int, y: int, width: int, length: int, label: str, target, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+    def __init__(self, x: int, y: int, width: int, height: int, label: str, target, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width
-        self.length = length
+        self.height = height
         self.label = label
         self.target = target
 
@@ -121,28 +126,30 @@ class Button(SelectableElement):
                 self.x - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS,
                 self.width + 2 * BORDER_THICKNESS,
-                self.length + 2 * BORDER_THICKNESS,
+                self.height + 2 * BORDER_THICKNESS,
                 (29, 98, 181)
             )
-
+        
         # Couleur principale
         color = "gray"
-        if type(self.target) == bool:  # Un peu obligé de faire deux if imbriqués au lieu d'un "and"
-            if self.target:
-                color = (29, 181, 103)
+        def is_target_bool():  # C'est soit ça soit deux if imbriqués au lieu d'un "and"...
+            return type(self.target) == bool
+        # And "court-circuité"
+        if is_target_bool() and self.target:
+            color = (29, 181, 103)
 
         k.fill_rect(
             self.x,
             self.y,
             self.width,
-            self.length,
+            self.height,
             color
         )
 
         k.draw_string(
             self.label,
             round(self.x + 0.5 * self.width - 5 * len(self.label)),
-            round(self.y + 0.5 * self.length - 9),
+            round(self.y + 0.5 * self.height - 9),
             "white",
             "gray"
         )
@@ -158,19 +165,47 @@ class Button(SelectableElement):
         return False
 
 
-class Slider(SelectableElement):
+class Slider(SelectableNode):
     """
     Barre de défilement accessible par la navigation (utilisée pour choisir la difficulté par exemple)
     """
 
-    def __init__(self, x: int, y: int, length: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+    def __init__(self, x: int, y: int, width: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
-        self.length = length  # attention length est la longueur en pixels utilisée à l'affichage
+        self.width = width  # attention length est la longueur en pixels utilisée à l'affichage
         self.size = size  # ceci est le nombre de valeurs que peut prendre la barre 
-        self.state = state  # ceci est la valeur actuelle de la barre (0 <= state < size)
+        self.state = state  # ceci est la valeur de la barre à l'instant t (0 <= state < size)
     
     def draw(self) -> None:
+        k.fill_rect(
+            self.x,
+            self.y - round(DEFAULT_SLIDER_HEIGHT / 2),
+            self.width,
+            DEFAULT_SLIDER_HEIGHT,
+            "gray"
+        )
+
+        if _cursor == self._index:  # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
+            k.fill_rect(
+                self.x - BORDER_THICKNESS - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
+                self.y - BORDER_THICKNESS - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
+                DEFAULT_SLIDER_HANDLE_WIDTH + 2 * BORDER_THICKNESS,
+                DEFAULT_SLIDER_HANDLE_HEIGHT + 2 * BORDER_THICKNESS,
+                (29, 98, 181)
+            )
+        
+        k.fill_rect(
+            self.x - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
+            self.y - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
+            DEFAULT_SLIDER_HANDLE_WIDTH,
+            DEFAULT_SLIDER_HANDLE_HEIGHT,
+            "gray"
+        )
+        # TODO : positionner correctement la manche du slider selon son état
+
+    def press(self) -> None:
         pass
+        
 
 
 # PARTIE
@@ -199,8 +234,8 @@ class Player(GameElement):
             self.x = SCREEN_WIDTH - self.size
         if self.x < 0:
             self.x = 0
-        if self.y + self.size > SCREEN_LENGTH:
-            self.y = SCREEN_LENGTH - self.size
+        if self.y + self.size > SCREEN_HEIGHT:
+            self.y = SCREEN_HEIGHT - self.size
         if self.y < 0:
             self.y = 0
 
@@ -230,14 +265,14 @@ class Obstacle(GameElement):
                 self.x = 0
             elif self.x + self.size > SCREEN_WIDTH:
                 self.x = SCREEN_WIDTH - self.size
-        elif self.y + self.size >= SCREEN_LENGTH or self.y <= 0:
+        elif self.y + self.size >= SCREEN_HEIGHT or self.y <= 0:
             # Changement de direction
             self.direction = -self.direction
             # Si l'obstacle est au delà du rebord, le décaler pour éviter qu'il se coince
             if self.y < 0:
                 self.y = 0
-            elif self.y + self.size > SCREEN_LENGTH:
-                self.y = SCREEN_LENGTH - self.size
+            elif self.y + self.size > SCREEN_HEIGHT:
+                self.y = SCREEN_HEIGHT - self.size
 
 
 class Game:
@@ -464,9 +499,7 @@ def print_layout(layout: list) -> None:
     """
     refresh()
     for elt in layout:
-        if type(elt) == Button:
-            elt.draw()
-        elif type(elt) == Label:
+        if isinstance(elt, GraphicalNode):
             elt.draw()
 
 
@@ -668,24 +701,24 @@ def thanos(object: list | Game) -> None:
 # MENUS
 MAIN_MENU = [
     Button(
-        DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Jouer", game,
         0, _down=1
     ),
     Button(
-        DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Partie personnalisée", 1,
         1, _up=0, _down=2
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 170, round(
-            DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_LENGTH,
+            DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
         "Infos", 2,
         2, _right=3, _up=1
     ),
     Button(
         round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH /
-                                                2 - 5), DEFAULT_BUTTON_LENGTH,
+                                                2 - 5), DEFAULT_BUTTON_HEIGHT,
         "Quitter", stop,
         3, 2, _up=1
     ),
@@ -695,30 +728,46 @@ MAIN_MENU = [
 ]
 
 CUSTOM_GAME_MENU = [
-    # - Slider difficulté de base
-    # - Slider vitesse du jeu
-    # - Slider vitesse du joueur
-    # - Slider taille du joueur
+    Slider(
+        20, 20, 100, 3,
+        1,
+        0, _down=1
+    ),  # - Slider difficulté de base
+    Slider(
+        20, 60, 100, 3,
+        1,
+        1, _up=0, _down=2
+    ),  # - Slider vitesse du jeu
+    Slider(
+        20, 100, 100, 3,
+        1,
+        2, _up=1, _down=3
+    ),  # - Slider vitesse du joueur
+    Slider(
+        20, 140, 100, 3,
+        1,
+        3, _up=2, _down=4
+    ),  # - Slider taille du joueur
     Button(
-        246, SCREEN_LENGTH - DEFAULT_BUTTON_LENGTH - 4, 70, DEFAULT_BUTTON_LENGTH,
+        246, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 0,
-        0
+        4, _up=3
     )
 ]
 
 INFO_MENU = [
     Button(
-        DEFAULT_BUTTON_CENTER, 48, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        DEFAULT_BUTTON_CENTER, 48, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Comment jouer", 3,
         0, _down=1
     ),
     Button(
-        DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Crédits", 4,
         1, _up=0, _down=2
     ),
     Button(
-        DEFAULT_BUTTON_CENTER, 138, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_LENGTH,
+        DEFAULT_BUTTON_CENTER, 138, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Retour", 0,
         2, _up=1
     )
@@ -726,7 +775,7 @@ INFO_MENU = [
 
 HOW_TO_PLAY = [
     Button(
-        246, SCREEN_LENGTH - DEFAULT_BUTTON_LENGTH - 4, 70, DEFAULT_BUTTON_LENGTH,
+        246, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 2,
         0
     ),
@@ -738,7 +787,7 @@ HOW_TO_PLAY = [
 
 CREDITS = [
     Button(
-        246, SCREEN_LENGTH - DEFAULT_BUTTON_LENGTH - 4, 70, DEFAULT_BUTTON_LENGTH,
+        246, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 2,
         0
     ),
