@@ -1,3 +1,4 @@
+#!/bin/env python
 from math import cos,sin,asin,acos,pi
 from random import randint
 from time import sleep
