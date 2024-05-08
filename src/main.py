@@ -1,3 +1,5 @@
+#!/bin/env python
+
 from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
@@ -13,7 +15,7 @@ BASE_PLAYER_X_POS = 160.0
 BASE_PLAYER_Y_POS = 120.0
 BASE_PLAYER_SPEED = 2.0
 BASE_PLAYER_SIZE = 10
-BASE_PLAYER_COLOR = "blue"
+BASE_PLAYER_COLOR = (29, 98, 181)
 BASE_OBSTACLES = []
 BASE_DIFFICULTY = 1
 FIRST_TICK = 0
@@ -42,7 +44,7 @@ BORDER_THICKNESS = 2
 DEFAULT_SLIDER_HANDLE_WIDTH = 6
 DEFAULT_SLIDER_HANDLE_HEIGHT = 20
 DEFAULT_SLIDER_HEIGHT = 10
-
+DEFAULT_SLIDER_SIDE_MARGIN = 10
 
 OBJECT_SPEED_MULTIPLIER = 50.0
 
@@ -156,12 +158,13 @@ class Button(SelectableNode):
 
     def press(self) -> bool:
         """Appuyer sur le bouton"""
-        if type(self.target) == int:
-            return True
-        elif type(self.target) == bool:
-            self.target = not self.target
-        else:
-            self.target()
+        match self.target:
+            case int():
+                return True
+            case bool():
+                self.target = not self.target
+            case _:
+                self.target()
         return False
 
 
@@ -187,7 +190,7 @@ class Slider(SelectableNode):
 
         if _cursor == self._index:  # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
             k.fill_rect(
-                self.x - BORDER_THICKNESS - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
+                DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2) - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
                 DEFAULT_SLIDER_HANDLE_WIDTH + 2 * BORDER_THICKNESS,
                 DEFAULT_SLIDER_HANDLE_HEIGHT + 2 * BORDER_THICKNESS,
@@ -195,13 +198,12 @@ class Slider(SelectableNode):
             )
         
         k.fill_rect(
-            self.x - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
+            DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
             self.y - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
             DEFAULT_SLIDER_HANDLE_WIDTH,
             DEFAULT_SLIDER_HANDLE_HEIGHT,
-            "gray"
+            (127, 127, 127)
         )
-        # TODO : positionner correctement la manche du slider selon son état
 
     def press(self) -> None:
         pass
@@ -729,23 +731,23 @@ MAIN_MENU = [
 
 CUSTOM_GAME_MENU = [
     Slider(
-        20, 20, 100, 3,
-        1,
+        20, 20, 100, 4,
+        0,
         0, _down=1
     ),  # - Slider difficulté de base
     Slider(
-        20, 60, 100, 3,
+        20, 60, 100, 4,
         1,
         1, _up=0, _down=2
     ),  # - Slider vitesse du jeu
     Slider(
-        20, 100, 100, 3,
-        1,
+        20, 100, 100, 4,
+        2,
         2, _up=1, _down=3
     ),  # - Slider vitesse du joueur
     Slider(
-        20, 140, 100, 3,
-        1,
+        20, 140, 100, 4,
+        3,
         3, _up=2, _down=4
     ),  # - Slider taille du joueur
     Button(
