@@ -57,6 +57,8 @@ _index = None
 _collision = None
 
 # MENUS
+
+
 class GraphicalNode:
     """
     Element de menu générique
@@ -131,9 +133,10 @@ class Button(SelectableNode):
                 self.height + 2 * BORDER_THICKNESS,
                 (29, 98, 181)
             )
-        
+
         # Couleur principale
         color = "gray"
+
         def is_target_bool():  # C'est soit ça soit deux if imbriqués au lieu d'un "and"...
             return type(self.target) == bool
         # And "court-circuité"
@@ -176,9 +179,10 @@ class Slider(SelectableNode):
     def __init__(self, x: int, y: int, width: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width  # attention length est la longueur en pixels utilisée à l'affichage
-        self.size = size  # ceci est le nombre de valeurs que peut prendre la barre 
-        self.state = state  # ceci est la valeur de la barre à l'instant t (0 <= state < size)
-    
+        self.size = size  # ceci est le nombre de valeurs que peut prendre la barre
+        # ceci est la valeur de la barre à l'instant t (0 <= state < size)
+        self.state = state
+
     def draw(self) -> None:
         k.fill_rect(
             self.x,
@@ -188,17 +192,21 @@ class Slider(SelectableNode):
             "gray"
         )
 
-        if _cursor == self._index:  # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
+        # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
+        if _cursor == self._index:
             k.fill_rect(
-                DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2) - BORDER_THICKNESS,
-                self.y - BORDER_THICKNESS - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
+                DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
+                    self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2) - BORDER_THICKNESS,
+                self.y - BORDER_THICKNESS -
+                round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
                 DEFAULT_SLIDER_HANDLE_WIDTH + 2 * BORDER_THICKNESS,
                 DEFAULT_SLIDER_HANDLE_HEIGHT + 2 * BORDER_THICKNESS,
                 (29, 98, 181)
             )
-        
+
         k.fill_rect(
-            DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
+            DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
+                self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
             self.y - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
             DEFAULT_SLIDER_HANDLE_WIDTH,
             DEFAULT_SLIDER_HANDLE_HEIGHT,
@@ -207,7 +215,32 @@ class Slider(SelectableNode):
 
     def press(self) -> None:
         pass
-        
+        # global _cursor, _index
+        # print_layout(layout)
+
+        # while not keydown(KEY_OK):
+        #     if keydown(KEY_UP) and (layout[_cursor]._up is not None):
+        #         _cursor = layout[_cursor]._up
+        #         print_layout(layout)
+        #         wait_key_basic(KEY_UP)
+        #     if keydown(KEY_DOWN) and (layout[_cursor]._down is not None):
+        #         _cursor = layout[_cursor]._down
+        #         print_layout(layout)
+        #         wait_key_basic(KEY_DOWN)
+        #     if keydown(KEY_LEFT) and (layout[_cursor]._left is not None):
+        #         _cursor = layout[_cursor]._left
+        #         print_layout(layout)
+        #         wait_key_basic(KEY_LEFT)
+        #     if keydown(KEY_RIGHT) and (layout[_cursor]._right is not None):
+        #         _cursor = layout[_cursor]._right
+        #         print_layout(layout)
+        #         wait_key_basic(KEY_RIGHT)
+
+        # if layout[_cursor].press():
+        #     _index = layout[_cursor].target
+        #     _cursor = 0
+        # while keydown(KEY_OK):
+        #     pass
 
 
 # PARTIE
@@ -215,7 +248,7 @@ class GameElement:
     def __init__(self, x: float, y: float) -> None:
         self.x = x
         self.y = y
-        
+
 
 class Player(GameElement):
     """
@@ -518,23 +551,19 @@ def layout_behaviour(layout: list) -> None:
         if keydown(KEY_UP) and (layout[_cursor]._up is not None):
             _cursor = layout[_cursor]._up
             print_layout(layout)
-            while keydown(KEY_UP):
-                pass
+            wait_key_basic(KEY_UP)
         if keydown(KEY_DOWN) and (layout[_cursor]._down is not None):
             _cursor = layout[_cursor]._down
             print_layout(layout)
-            while keydown(KEY_DOWN):
-                pass
+            wait_key_basic(KEY_DOWN)
         if keydown(KEY_LEFT) and (layout[_cursor]._left is not None):
             _cursor = layout[_cursor]._left
             print_layout(layout)
-            while keydown(KEY_LEFT):
-                pass
+            wait_key_basic(KEY_LEFT)
         if keydown(KEY_RIGHT) and (layout[_cursor]._right is not None):
             _cursor = layout[_cursor]._right
             print_layout(layout)
-            while keydown(KEY_RIGHT):
-                pass
+            wait_key_basic(KEY_RIGHT)
 
     if layout[_cursor].press():
         _index = layout[_cursor].target
@@ -565,7 +594,7 @@ def move_generic(obj: Player | Obstacle, direction: int | float, dt: float) -> N
 
 
 def wait_key(key: int) -> None:
-    """Attendre l'appui d'une touche en particulier (relâchée au préalable)
+    """Attendre l'appui et le relâchement d'une touche en particulier (relâchée au préalable)
 
     Args:
         key (int): Touche (numworks) à détecter
@@ -573,6 +602,16 @@ def wait_key(key: int) -> None:
     while keydown(key):
         pass
     while not keydown(key):
+        pass
+
+
+def wait_key_basic(key: int) -> None:
+    """Attendre l'appui d'une touche en particulier (relâchée au préalable)
+
+    Args:
+        key (int): Touche (numworks) à détecter
+    """
+    while keydown(key):
         pass
 
 
