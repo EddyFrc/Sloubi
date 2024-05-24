@@ -180,10 +180,9 @@ class Slider(SelectableNode):
         super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width  # attention length est la longueur en pixels utilisée à l'affichage
         self.size = size  # ceci est le nombre de valeurs que peut prendre la barre
-        # ceci est la valeur de la barre à l'instant t (0 <= state < size)
-        self.state = state
+        self.state = state  # ceci est la valeur de la barre à l'instant t (0 <= state < size)
 
-    def draw(self) -> None:
+    def draw(self, handle_color=(29, 98, 181)) -> None:
         k.fill_rect(
             self.x,
             self.y - round(DEFAULT_SLIDER_HEIGHT / 2),
@@ -192,7 +191,7 @@ class Slider(SelectableNode):
             "gray"
         )
 
-        # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
+        # Si le curseur est positionné sur ce bouton, on affiche un contour supplémentaire (rectangle de couleur en arrière plan)
         if _cursor == self._index:
             k.fill_rect(
                 DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
@@ -201,7 +200,7 @@ class Slider(SelectableNode):
                 round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
                 DEFAULT_SLIDER_HANDLE_WIDTH + 2 * BORDER_THICKNESS,
                 DEFAULT_SLIDER_HANDLE_HEIGHT + 2 * BORDER_THICKNESS,
-                (29, 98, 181)
+                handle_color
             )
 
         k.fill_rect(
@@ -212,35 +211,35 @@ class Slider(SelectableNode):
             DEFAULT_SLIDER_HANDLE_HEIGHT,
             (127, 127, 127)
         )
+    
+    def refresh(self, handle_color) -> None:
+        k.fill_rect(
+            self.x,
+            self.y - BORDER_THICKNESS -
+            round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
+            self.width,
+            DEFAULT_SLIDER_HANDLE_HEIGHT + 2 * BORDER_THICKNESS,
+            "white"
+        )
+        self.draw(handle_color)
 
     def press(self) -> None:
-        pass
-        # global _cursor, _index
-        # print_layout(layout)
+        self.refresh((26, 189, 12))
+        while keydown(KEY_OK):
+            pass
 
-        # while not keydown(KEY_OK):
-        #     if keydown(KEY_UP) and (layout[_cursor]._up is not None):
-        #         _cursor = layout[_cursor]._up
-        #         print_layout(layout)
-        #         wait_key_basic(KEY_UP)
-        #     if keydown(KEY_DOWN) and (layout[_cursor]._down is not None):
-        #         _cursor = layout[_cursor]._down
-        #         print_layout(layout)
-        #         wait_key_basic(KEY_DOWN)
-        #     if keydown(KEY_LEFT) and (layout[_cursor]._left is not None):
-        #         _cursor = layout[_cursor]._left
-        #         print_layout(layout)
-        #         wait_key_basic(KEY_LEFT)
-        #     if keydown(KEY_RIGHT) and (layout[_cursor]._right is not None):
-        #         _cursor = layout[_cursor]._right
-        #         print_layout(layout)
-        #         wait_key_basic(KEY_RIGHT)
-
-        # if layout[_cursor].press():
-        #     _index = layout[_cursor].target
-        #     _cursor = 0
-        # while keydown(KEY_OK):
-        #     pass
+        while not keydown(KEY_OK):
+            if keydown(KEY_LEFT) and self.state > 0:
+                self.state -= 1
+                self.refresh((26, 189, 12))
+                wait_key_basic(KEY_LEFT)
+            if keydown(KEY_RIGHT) and self.state < self.size - 1:
+                self.state += 1
+                self.refresh((26, 189, 12))
+                wait_key_basic(KEY_RIGHT)
+        
+        while keydown(KEY_OK):
+            pass
 
 
 # PARTIE
