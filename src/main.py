@@ -48,6 +48,9 @@ DEFAULT_SLIDER_SIDE_MARGIN = 10
 
 OBJECT_SPEED_MULTIPLIER = 50.0
 
+COLOR_SELECTED = (29, 98, 181)
+COLOR_ENABLED = (26, 189, 12)
+
 # VARIABLES GLOBALES CRITIQUES
 global _running, _game, _cursor, _index, _collision
 _game = None
@@ -182,7 +185,7 @@ class Slider(SelectableNode):
         self.size = size  # ceci est le nombre de valeurs que peut prendre la barre
         self.state = state  # ceci est la valeur de la barre à l'instant t (0 <= state < size)
 
-    def draw(self, handle_color=(29, 98, 181)) -> None:
+    def draw(self, handle_color=COLOR_SELECTED) -> None:
         k.fill_rect(
             self.x,
             self.y - round(DEFAULT_SLIDER_HEIGHT / 2),
@@ -224,18 +227,18 @@ class Slider(SelectableNode):
         self.draw(handle_color)
 
     def press(self) -> None:
-        self.refresh((26, 189, 12))
+        self.refresh(COLOR_ENABLED)
         while keydown(KEY_OK):
             pass
 
         while not keydown(KEY_OK):
             if keydown(KEY_LEFT) and self.state > 0:
                 self.state -= 1
-                self.refresh((26, 189, 12))
+                self.refresh(COLOR_ENABLED)
                 wait_key_basic(KEY_LEFT)
             if keydown(KEY_RIGHT) and self.state < self.size - 1:
                 self.state += 1
-                self.refresh((26, 189, 12))
+                self.refresh(COLOR_ENABLED)
                 wait_key_basic(KEY_RIGHT)
         
         while keydown(KEY_OK):
@@ -430,11 +433,7 @@ def main() -> None:
 
     try:
         k.quit()
-    except ModuleNotFoundError:
-        pass
-    except NameError:
-        pass
-    except AttributeError:
+    except Exception:
         pass
 
 
@@ -753,13 +752,13 @@ MAIN_MENU = [
     Button(
         DEFAULT_BUTTON_CENTER, 170, round(
             DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
-        "Infos", 2,
+        "Quitter", stop,
         2, _right=3, _up=1
     ),
     Button(
         round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH /
                                                 2 - 5), DEFAULT_BUTTON_HEIGHT,
-        "Quitter", stop,
+        "Infos", 2,
         3, 2, _up=1
     ),
     Label(
@@ -769,29 +768,35 @@ MAIN_MENU = [
 
 CUSTOM_GAME_MENU = [
     Slider(
-        20, 20, 100, 4,
+        round(SCREEN_WIDTH / 2) + 4, 20, 100, 10,
         0,
         0, _down=1
     ),  # - Slider difficulté de base
     Slider(
-        20, 60, 100, 4,
+        round(SCREEN_WIDTH / 2) + 4, 60, 100, 4,
         1,
         1, _up=0, _down=2
     ),  # - Slider vitesse du jeu
     Slider(
-        20, 100, 100, 4,
+        round(SCREEN_WIDTH / 2) + 4, 100, 100, 4,
         2,
         2, _up=1, _down=3
     ),  # - Slider vitesse du joueur
     Slider(
-        20, 140, 100, 4,
+        round(SCREEN_WIDTH / 2) + 4, 140, 100, 4,
         3,
-        3, _up=2, _down=4
+        3, _up=2, _down=5
     ),  # - Slider taille du joueur
     Button(
-        246, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
+        4, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 0,
-        4, _up=3
+        4, _up=3, _right=5
+    ),
+    Button(
+        245, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
+        "Jouer", 0,  # <- cible juste ici
+        # TODO Lancer les parties personnalisées et prévisualiser la valeur finale pour chaque slider dans le menu
+        5, _up=3, _left=4
     )
 ]
 
@@ -815,7 +820,7 @@ INFO_MENU = [
 
 HOW_TO_PLAY = [
     Button(
-        246, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
+        4, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 2,
         0
     ),
@@ -827,7 +832,7 @@ HOW_TO_PLAY = [
 
 CREDITS = [
     Button(
-        246, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
+        4, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 2,
         0
     ),
