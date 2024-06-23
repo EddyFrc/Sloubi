@@ -22,16 +22,18 @@ FIRST_TICK = 0
 BASE_FPS = 60.0
 BASE_DT = 1 / BASE_FPS
 
-DEFAULT_OPTIONS = {"base_player_x_pos": BASE_PLAYER_X_POS,
-                   "base_player_y_pos": BASE_PLAYER_Y_POS,
-                   "base_player_speed": BASE_PLAYER_SPEED,
-                   "base_player_size": BASE_PLAYER_SIZE,
-                   "base_player_color": BASE_PLAYER_COLOR,
-                   "base_obstacles": BASE_OBSTACLES,
-                   "base_dif": BASE_DIFFICULTY,
-                   "base_dt": BASE_DT,
-                   "first_tick": FIRST_TICK,
-                   "base_fps": BASE_FPS}
+DEFAULT_OPTIONS = {
+    "base_player_x_pos": BASE_PLAYER_X_POS,
+    "base_player_y_pos": BASE_PLAYER_Y_POS,
+    "base_player_speed": BASE_PLAYER_SPEED,
+    "base_player_size": BASE_PLAYER_SIZE,
+    "base_player_color": BASE_PLAYER_COLOR,
+    "base_obstacles": BASE_OBSTACLES,
+    "base_dif": BASE_DIFFICULTY,
+    "base_dt": BASE_DT,
+    "first_tick": FIRST_TICK,
+    "base_fps": BASE_FPS
+}
 
 SCREEN_WIDTH = 320
 SCREEN_HEIGHT = 222
@@ -60,8 +62,6 @@ _index = None
 _collision = None
 
 # MENUS
-
-
 class GraphicalNode:
     """
     Element de menu générique
@@ -72,21 +72,8 @@ class GraphicalNode:
         self.y = y
 
 
-class SelectableNode(GraphicalNode):
-    """
-    Element de menu qu'on sélectionne au curseur
-    """
-
-    def __init__(self, x: int, y: int, _index: int, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
-        super().__init__(x, y)
-        self._index = _index
-        self._left = _left
-        self._right = _right
-        self._up = _up
-        self._down = _down
-
-
 class Label(GraphicalNode):
+
     """
     Texte simple qui peut être affiché sur l'écran
     """
@@ -110,6 +97,20 @@ class Label(GraphicalNode):
             buffer = buffer[index + 1:]
             y += 18
         k.draw_string(buffer, self.x, y, self.color, self.background)
+
+
+class SelectableNode(GraphicalNode):
+    """
+    Element de menu qu'on sélectionne au curseur
+    """
+
+    def __init__(self, x: int, y: int, _index: int, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+        super().__init__(x, y)
+        self._index = _index
+        self._left = _left
+        self._right = _right
+        self._up = _up
+        self._down = _down
 
 
 class Button(SelectableNode):
@@ -183,7 +184,8 @@ class Slider(SelectableNode):
         super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width  # attention length est la longueur en pixels utilisée à l'affichage
         self.size = size  # ceci est le nombre de valeurs que peut prendre la barre
-        self.state = state  # ceci est la valeur de la barre à l'instant t (0 <= state < size)
+        # ceci est la valeur de la barre à l'instant t (0 <= state < size)
+        self.state = state
 
     def draw(self, handle_color=COLOR_SELECTED) -> None:
         k.fill_rect(
@@ -214,7 +216,7 @@ class Slider(SelectableNode):
             DEFAULT_SLIDER_HANDLE_HEIGHT,
             (127, 127, 127)
         )
-    
+
     def refresh(self, handle_color) -> None:
         k.fill_rect(
             self.x,
@@ -240,7 +242,7 @@ class Slider(SelectableNode):
                 self.state += 1
                 self.refresh(COLOR_ENABLED)
                 wait_key_basic(KEY_RIGHT)
-        
+
         while keydown(KEY_OK):
             pass
 
@@ -795,7 +797,7 @@ CUSTOM_GAME_MENU = [
     Button(
         245, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Jouer", 0,  # <- cible juste ici
-        # TODO Lancer les parties personnalisées et prévisualiser la valeur finale pour chaque slider dans le menu
+        # TODO : Lancer les parties personnalisées et prévisualiser la valeur finale pour chaque slider dans le menu
         5, _up=3, _left=4
     )
 ]
