@@ -4,6 +4,7 @@ from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
 from threading import Thread
+from typing import Callable, final
 
 from ion import *
 # from kandinsky import *
@@ -53,6 +54,8 @@ OBJECT_SPEED_MULTIPLIER = 50.0
 COLOR_SELECTED = (29, 98, 181)
 COLOR_ENABLED = (26, 189, 12)
 
+LETTER_WIDTH = 10
+
 # VARIABLES GLOBALES CRITIQUES
 global _running, _game, _cursor, _index, _collision
 _game = None
@@ -62,6 +65,8 @@ _index = None
 _collision = None
 
 # MENUS
+
+
 class GraphicalNode:
     """
     Element de menu générique
@@ -70,33 +75,6 @@ class GraphicalNode:
     def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
-
-
-class Label(GraphicalNode):
-
-    """
-    Texte simple qui peut être affiché sur l'écran
-    """
-
-    def __init__(self, x: int, y: int, length: int, content: str, color: str | tuple = "black", background: str | tuple = "white") -> None:
-        super().__init__(x, y)
-        self.length = length
-        self.content = content
-        self.color = color
-        self.background = background
-
-    def draw(self) -> None:
-        buffer = self.content
-        y = self.y
-        while len(buffer) * 10 > self.length:
-            index = round(self.length / 10)
-            while buffer[index] != " ":
-                index -= 1
-            k.draw_string(buffer[0:index], self.x, y,
-                          self.color, self.background)
-            buffer = buffer[index + 1:]
-            y += 18
-        k.draw_string(buffer, self.x, y, self.color, self.background)
 
 
 class SelectableNode(GraphicalNode):
@@ -245,6 +223,39 @@ class Slider(SelectableNode):
 
         while keydown(KEY_OK):
             pass
+
+
+class Label(GraphicalNode):
+
+    """
+    Texte simple qui peut être affiché sur l'écran
+    """
+
+    def __init__(self, x: int, y: int, length: int, content: str | Callable[[Slider], str], input: object = None, color: str | tuple = "black", background: str | tuple = "white") -> None:
+        super().__init__(x, y)
+        self.length = length
+        self.content = content
+        self.input = input
+        self.color = color
+        self.background = background
+
+    def draw(self) -> None:
+        if type(self.content) == str:
+            buffer = self.content
+        else:
+            buffer = self.content(self.input)
+
+        y = self.y
+        while len(buffer) * LETTER_WIDTH > self.length:
+            index = round(self.length / LETTER_WIDTH)
+            while buffer[index] != " ":
+                index -= 1
+            k.draw_string(buffer[0:index], self.x, y,
+                          self.color, self.background)
+            buffer = buffer[index + 1:]
+            y += 18
+
+        k.draw_string(buffer, self.x, y, self.color, self.background)
 
 
 # PARTIE
@@ -572,6 +583,18 @@ def layout_behaviour(layout: list) -> None:
         pass
 
 
+def base_difficulty_slider(slider: Slider) -> str:
+    return str(slider.state + 1)
+
+
+def speed_slider(slider: Slider) -> str:
+    return ('x' + str(round(slider.state + 2, 2) / 6.0))[:5]
+
+
+def player_size_slider(slider: Slider) -> str:
+    return str((slider.state + 1) * 2) + 'px'
+
+
 def print_generic_square(obj: Obstacle | Player) -> None:
     """Affiche l'élément (obstacle ou joueur) en argument
 
@@ -695,7 +718,7 @@ def new_obstacle(dif: int) -> Obstacle:
     """Retourne un nouvel obstacle en fonction de la difficulté spécifiée en argument
 
     Args:
-        dif (int): Difficulté à laquelle se rattacher
+        dif (int): Difficulté de l'obstacle
 
     Returns:
         Obstacle: Obstacle correspondant à la difficulté
@@ -764,31 +787,40 @@ MAIN_MENU = [
         3, 2, _up=1
     ),
     Label(
-        120, 30, 320, "SLOUBI 2", "black", "white"
+        120, 30, 320, "SLOUBI 2"
     )
 ]
 
 CUSTOM_GAME_MENU = [
+    # Slider difficulté de base
     Slider(
-        round(SCREEN_WIDTH / 2) + 4, 20, 100, 10,
-        0,
+        round(SCREEN_WIDTH / 2) + 4, 20, 100,
+        10, 0,
         0, _down=1
-    ),  # - Slider difficulté de base
+    ),
+
+    # Slider vitesse du jeu
     Slider(
-        round(SCREEN_WIDTH / 2) + 4, 60, 100, 4,
-        1,
+        round(SCREEN_WIDTH / 2) + 4, 60, 100,
+        11, 4,
         1, _up=0, _down=2
-    ),  # - Slider vitesse du jeu
+    ),
+
+    # Slider vitesse du joueur
     Slider(
-        round(SCREEN_WIDTH / 2) + 4, 100, 100, 4,
-        2,
+        round(SCREEN_WIDTH / 2) + 4, 100, 100,
+        11, 4,
         2, _up=1, _down=3
-    ),  # - Slider vitesse du joueur
+    ),
+
+    # Slider taille du joueur
     Slider(
-        round(SCREEN_WIDTH / 2) + 4, 140, 100, 4,
-        3,
+        round(SCREEN_WIDTH / 2) + 4, 140, 100,
+        15, 4,
         3, _up=2, _down=5
-    ),  # - Slider taille du joueur
+    ),
+
+
     Button(
         4, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 0,
@@ -801,6 +833,27 @@ CUSTOM_GAME_MENU = [
         5, _up=3, _left=4
     )
 ]
+
+CUSTOM_GAME_MENU.extend(
+    [
+        Label(
+            round(SCREEN_WIDTH / 2) + 108, 20, 50,
+            base_difficulty_slider, CUSTOM_GAME_MENU[0]
+        ),
+        Label(
+            round(SCREEN_WIDTH / 2) + 108, 60, 50,
+            speed_slider, CUSTOM_GAME_MENU[1]
+        ),
+        Label(
+            round(SCREEN_WIDTH / 2) + 108, 100, 50,
+            speed_slider, CUSTOM_GAME_MENU[2]
+        ),
+        Label(
+            round(SCREEN_WIDTH / 2) + 108, 140, 50,
+            player_size_slider, CUSTOM_GAME_MENU[3]
+        )
+    ]
+)
 
 INFO_MENU = [
     Button(
