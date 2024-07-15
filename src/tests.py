@@ -1,5 +1,4 @@
-from kandinsky import *
-from ion import *
+from kandinsky import fill_rect
 from time import sleep
 
 for y in range(20):

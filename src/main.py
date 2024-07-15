@@ -4,7 +4,7 @@ from math import cos, sin, asin, acos, pi
 from random import randint
 from time import sleep
 from threading import Thread
-from typing import Callable, final
+from typing import Callable
 
 from ion import *
 # from kandinsky import *
@@ -22,6 +22,7 @@ BASE_DIFFICULTY = 1
 FIRST_TICK = 0
 BASE_FPS = 60.0
 BASE_DT = 1 / BASE_FPS
+BASE_SPEED = 1.0
 
 DEFAULT_OPTIONS = {
     "base_player_x_pos": BASE_PLAYER_X_POS,
@@ -33,7 +34,8 @@ DEFAULT_OPTIONS = {
     "base_dif": BASE_DIFFICULTY,
     "base_dt": BASE_DT,
     "first_tick": FIRST_TICK,
-    "base_fps": BASE_FPS
+    "base_fps": BASE_FPS,
+    "base_speed": BASE_SPEED
 }
 
 SCREEN_WIDTH = 320
@@ -65,8 +67,6 @@ _index = None
 _collision = None
 
 # MENUS
-
-
 class GraphicalNode:
     """
     Element de menu générique
@@ -330,15 +330,16 @@ class Game:
     Conteneur d'une partie
     """
 
-    def __init__(self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, score: int) -> None:
+    def __init__(self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, speed: float, score: int) -> None:
         # fps = rendus par secondes du thread graphique
-        # dt = facteur de vitesse du jeu (moteur)
+        # dt = facteur de vitesse du jeu (moteur) : normalement inversement proportionnel au nombre d'ips
         self.player = player
         self.obstacles = obstacles
         self.difficulty = difficulty
         self.base_difficulty = difficulty
         self.fps = fps
         self.dt = dt
+        self.speed = speed
         self.score = score
 
     def move_game(self) -> None:
@@ -347,22 +348,22 @@ class Game:
         """
         # On commence par déplacer tous les obstacles
         for obstacle in self.obstacles:
-            move_generic(obstacle, obstacle.direction, self.dt)
+            move_generic(obstacle, obstacle.direction, self.dt, self.speed)
 
         # Puis on déplace le joueur selon les touches sur lesquelles il appuie
         key_x = int(keydown(KEY_RIGHT)) - int(keydown(KEY_LEFT))
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))  # Idem
         if not (key_x == 0 and key_y == 0):
             if key_x == 0:
-                move_generic(self.player, deg(asin(key_y)), self.dt)
+                move_generic(self.player, deg(asin(key_y)), self.dt, self.speed)
             elif key_y == 0:
-                move_generic(self.player, deg(acos(key_x)), self.dt)
+                move_generic(self.player, deg(acos(key_x)), self.dt, self.speed)
             elif key_y == 1:
                 move_generic(
-                    self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt)
+                    self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt, self.speed)
             else:
                 move_generic(
-                    self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2, self.dt)
+                    self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2, self.dt, self.speed)
         self.player.edge_bounce_player()
 
     def print_game(self) -> None:
@@ -494,6 +495,22 @@ def game(**kwargs) -> None:
     thanos(_game)
 
 
+def custom_game() -> None:
+    game(
+        base_player_x_pos=BASE_PLAYER_X_POS,
+        base_player_y_pos=BASE_PLAYER_Y_POS,
+        base_player_speed=BASE_PLAYER_SPEED * speed_slider(CUSTOM_GAME_MENU[2]),
+        base_player_size=ps_slider(CUSTOM_GAME_MENU[3]),
+        base_player_color=BASE_PLAYER_COLOR,
+        base_obstacles=BASE_OBSTACLES,
+        base_dif=bd_slider(CUSTOM_GAME_MENU[0]),
+        base_dt=BASE_DT,
+        base_speed=speed_slider(CUSTOM_GAME_MENU[1]),
+        first_tick=FIRST_TICK,
+        base_fps=BASE_FPS
+    )
+
+
 def create_game(**options) -> Game:
     """Retourne un objet Game correspondant aux paramètres en entrée
 
@@ -512,8 +529,9 @@ def create_game(**options) -> Game:
         obstacles=options["base_obstacles"],
         difficulty=options["base_dif"],
         dt=options["base_dt"],
+        speed=options["base_speed"],
         score=options["first_tick"],
-        fps=options["base_fps"]
+        fps=options["base_fps"],
     )
 
 
@@ -583,16 +601,28 @@ def layout_behaviour(layout: list) -> None:
         pass
 
 
-def base_difficulty_slider(slider: Slider) -> str:
-    return str(slider.state + 1)
+def bd_slider(slider: Slider) -> int:
+    return slider.state + 1
 
 
-def speed_slider(slider: Slider) -> str:
-    return ('x' + str(round(slider.state + 2, 2) / 6.0))[:5]
+def speed_slider(slider: Slider) -> float:
+    return (slider.state + 2) / 6.0
 
 
-def player_size_slider(slider: Slider) -> str:
-    return str((slider.state + 1) * 2) + 'px'
+def ps_slider(slider: Slider) -> int:
+    return (slider.state + 1) * 2
+
+
+def bd_slider_preview(slider: Slider) -> str:
+    return str(bd_slider(slider))
+
+
+def speed_slider_preview(slider: Slider) -> str:
+    return ('x' + str(speed_slider(slider)))[:5]
+
+
+def ps_slider_preview(slider: Slider) -> str:
+    return str(ps_slider(slider)) + 'px'
 
 
 def print_generic_square(obj: Obstacle | Player) -> None:
@@ -605,15 +635,15 @@ def print_generic_square(obj: Obstacle | Player) -> None:
         obj.size), int(obj.size), obj.color)
 
 
-def move_generic(obj: Player | Obstacle, direction: int | float, dt: float) -> None:
+def move_generic(obj: Player | Obstacle, direction: int | float, dt: float, global_speed: float) -> None:
     """Déplace l'élement en argument (obstacle ou joueur) selon sa vitesse et la direction donnée en argument
 
     Args:
         obj (Player | Obstacle): Elément à déplacer
         direction (int | float): Direction dans laquelle déplacer l'objet
     """
-    obj.x += cos(rad(direction)) * obj.speed * dt * OBJECT_SPEED_MULTIPLIER
-    obj.y += sin(rad(direction)) * obj.speed * dt * OBJECT_SPEED_MULTIPLIER
+    obj.x += cos(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
+    obj.y += sin(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
 
 
 def wait_key(key: int) -> None:
@@ -828,29 +858,45 @@ CUSTOM_GAME_MENU = [
     ),
     Button(
         245, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
-        "Jouer", 0,  # <- cible juste ici
-        # TODO : Lancer les parties personnalisées et prévisualiser la valeur finale pour chaque slider dans le menu
+        "Jouer", custom_game,
         5, _up=3, _left=4
+    ),
+
+    Label(
+        0, 10, SCREEN_WIDTH,
+        "Diff. de base :"
+    ),
+    Label(
+        0, 50, SCREEN_WIDTH,
+        "Vit. du jeu :"
+    ),
+    Label(
+        0, 90, SCREEN_WIDTH,
+        "Vit. du joueur :"
+    ),
+    Label(
+        0, 130, SCREEN_WIDTH,
+        "Taille joueur :"
     )
 ]
 
 CUSTOM_GAME_MENU.extend(
     [
         Label(
-            round(SCREEN_WIDTH / 2) + 108, 20, 50,
-            base_difficulty_slider, CUSTOM_GAME_MENU[0]
+            round(SCREEN_WIDTH / 2) + 108, 10, 50,
+            bd_slider_preview, CUSTOM_GAME_MENU[0]
         ),
         Label(
-            round(SCREEN_WIDTH / 2) + 108, 60, 50,
-            speed_slider, CUSTOM_GAME_MENU[1]
+            round(SCREEN_WIDTH / 2) + 108, 50, 50,
+            speed_slider_preview, CUSTOM_GAME_MENU[1]
         ),
         Label(
-            round(SCREEN_WIDTH / 2) + 108, 100, 50,
-            speed_slider, CUSTOM_GAME_MENU[2]
+            round(SCREEN_WIDTH / 2) + 108, 90, 50,
+            speed_slider_preview, CUSTOM_GAME_MENU[2]
         ),
         Label(
-            round(SCREEN_WIDTH / 2) + 108, 140, 50,
-            player_size_slider, CUSTOM_GAME_MENU[3]
+            round(SCREEN_WIDTH / 2) + 108, 130, 50,
+            ps_slider_preview, CUSTOM_GAME_MENU[3]
         )
     ]
 )
