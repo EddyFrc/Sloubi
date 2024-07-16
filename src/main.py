@@ -1,14 +1,12 @@
 #!/bin/env python
 
-from math import cos, sin, asin, acos, pi
+from math import *
 from random import randint
-from time import sleep
-from threading import Thread
+from time import sleep, perf_counter
 from typing import Callable
 
 from ion import *
-# from kandinsky import *
-import kandinsky as k
+from kandinsky import *
 
 # CONSTANTES
 # Pour modifier les options par défaut en partie rapide, modifier ces constantes :
@@ -108,7 +106,7 @@ class Button(SelectableNode):
         Afficher le bouton sur l'écran
         """
         if _cursor == self._index:  # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
-            k.fill_rect(
+            fill_rect(
                 self.x - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS,
                 self.width + 2 * BORDER_THICKNESS,
@@ -125,7 +123,7 @@ class Button(SelectableNode):
         if is_target_bool() and self.target:
             color = (29, 181, 103)
 
-        k.fill_rect(
+        fill_rect(
             self.x,
             self.y,
             self.width,
@@ -133,7 +131,7 @@ class Button(SelectableNode):
             color
         )
 
-        k.draw_string(
+        draw_string(
             self.label,
             round(self.x + 0.5 * self.width - 5 * len(self.label)),
             round(self.y + 0.5 * self.height - 9),
@@ -166,7 +164,7 @@ class Slider(SelectableNode):
         self.state = state
 
     def draw(self, handle_color=COLOR_SELECTED) -> None:
-        k.fill_rect(
+        fill_rect(
             self.x,
             self.y - round(DEFAULT_SLIDER_HEIGHT / 2),
             self.width,
@@ -176,7 +174,7 @@ class Slider(SelectableNode):
 
         # Si le curseur est positionné sur ce bouton, on affiche un contour supplémentaire (rectangle de couleur en arrière plan)
         if _cursor == self._index:
-            k.fill_rect(
+            fill_rect(
                 DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
                     self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2) - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS -
@@ -186,7 +184,7 @@ class Slider(SelectableNode):
                 handle_color
             )
 
-        k.fill_rect(
+        fill_rect(
             DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
                 self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
             self.y - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
@@ -196,7 +194,7 @@ class Slider(SelectableNode):
         )
 
     def refresh(self, handle_color) -> None:
-        k.fill_rect(
+        fill_rect(
             self.x,
             self.y - BORDER_THICKNESS -
             round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
@@ -250,12 +248,12 @@ class Label(GraphicalNode):
             index = round(self.length / LETTER_WIDTH)
             while buffer[index] != " ":
                 index -= 1
-            k.draw_string(buffer[0:index], self.x, y,
+            draw_string(buffer[0:index], self.x, y,
                           self.color, self.background)
             buffer = buffer[index + 1:]
             y += 18
 
-        k.draw_string(buffer, self.x, y, self.color, self.background)
+        draw_string(buffer, self.x, y, self.color, self.background)
 
 
 # PARTIE
@@ -330,7 +328,7 @@ class Game:
     Conteneur d'une partie
     """
 
-    def __init__(self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, speed: float, score: int) -> None:
+    def __init__(self, player: Player, obstacles: list[Obstacle], difficulty: int, fps: int | float, dt: float, speed: float, score: int) -> None:
         # fps = rendus par secondes du thread graphique
         # dt = facteur de vitesse du jeu (moteur) : normalement inversement proportionnel au nombre d'ips
         self.player = player
@@ -341,6 +339,7 @@ class Game:
         self.dt = dt
         self.speed = speed
         self.score = score
+        self.time_offset = 0
 
     def move_game(self) -> None:
         """
@@ -355,11 +354,9 @@ class Game:
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))  # Idem
         if not (key_x == 0 and key_y == 0):
             if key_x == 0:
-                move_generic(self.player, deg(
-                    asin(key_y)), self.dt, self.speed)
+                move_generic(self.player, deg(asin(key_y)), self.dt, self.speed)
             elif key_y == 0:
-                move_generic(self.player, deg(
-                    acos(key_x)), self.dt, self.speed)
+                move_generic(self.player, deg(acos(key_x)), self.dt, self.speed)
             elif key_y == 1:
                 move_generic(
                     self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt, self.speed)
@@ -372,7 +369,7 @@ class Game:
         """
         Afficher tous les éléments de la partie
         """
-        k.draw_string("Score : " + str(round(self.score)), 0, 0)
+        draw_string("Score : " + str(round(self.score)), 0, 0)
         for obstacle in self.obstacles:
             print_generic_square(obstacle)
         print_generic_square(self.player)
@@ -408,28 +405,27 @@ class Game:
         if self.score / self.difficulty > 240:  # Augmentation de la difficulté
             self.difficulty += 1
             self.obstacles.append(new_obstacle(self.difficulty + 1))
-        sleep(self.dt)
+        if self.dt > self.time_offset:
+            sleep(self.dt - (self.time_offset * 0.2))
+        # sleep(self.dt)
 
     def next_image(self) -> None:
+        balise_debut = perf_counter()
         refresh()  # Rafraîchir l'écran
         self.print_game()  # Afficher tous les objets
-        try:
-            k.wait_vblank()
-        except ModuleNotFoundError:
-            sleep(1 / self.fps)
-        except NameError:
-            sleep(1 / self.fps)
-        except AttributeError:
-            sleep(1 / self.fps)
+        self.time_offset = perf_counter() - balise_debut
+        # print(f"dt = {self.dt}")
+        # print(f"offset = {self.time_offset}")
+        # print("attente totale = " + str(self.dt - self.time_offset))
 
     def game_over(self) -> None:
         """
         Affiche l'écran de game over
         """
         refresh()
-        k.draw_string("GAME OVER", 112, 70)
-        k.draw_string("Score : " + str(round(self.score)), 105, 90)
-        k.draw_string("Difficulté initiale : " +
+        draw_string("GAME OVER", 112, 70)
+        draw_string("Score : " + str(round(self.score)), 105, 90)
+        draw_string("Difficulté initiale : " +
                       str(self.base_difficulty), 45, 110)
         wait_key(KEY_OK)
 
@@ -447,25 +443,6 @@ def main() -> None:
         if keydown(37):  # 37 correspond à la touche 5 sur la numworks
             _running = False
 
-    try:
-        k.quit()
-    except Exception:
-        pass
-
-
-def engine_thread() -> None:
-    global _game, _collision
-    _collision = False
-    while not _game.is_colliding():
-        _game.next()
-    _collision = True
-
-
-def graphic_thread() -> None:
-    global _game, _collision
-    while not _collision:
-        _game.next_image()
-
 
 def stop() -> None:
     """
@@ -480,7 +457,7 @@ def game(**kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
-    global _game, _collision
+    global _game
 
     if len(kwargs) == 0:
         _game = game_setup()
@@ -488,10 +465,9 @@ def game(**kwargs) -> None:
         _game = game_setup(**kwargs)
 
     # Boucle de jeu principale
-    processing = Thread(target=engine_thread, name="EngineThread")
-    processing.start()
-
-    graphic_thread()
+    while not _game.is_colliding():
+        _game.next()
+        _game.next_image()
 
     _game.game_over()
     thanos(_game)
@@ -501,8 +477,7 @@ def custom_game() -> None:
     game(
         base_player_x_pos=BASE_PLAYER_X_POS,
         base_player_y_pos=BASE_PLAYER_Y_POS,
-        base_player_speed=BASE_PLAYER_SPEED *
-        speed_slider(CUSTOM_GAME_MENU[2]),
+        base_player_speed=BASE_PLAYER_SPEED * speed_slider(CUSTOM_GAME_MENU[2]),
         base_player_size=ps_slider(CUSTOM_GAME_MENU[3]),
         base_player_color=BASE_PLAYER_COLOR,
         base_obstacles=BASE_OBSTACLES,
@@ -634,7 +609,7 @@ def print_generic_square(obj: Obstacle | Player) -> None:
     Args:
         obj (Obstacle | Player): Element à afficher
     """
-    k.fill_rect(int(obj.x), int(obj.y), int(
+    fill_rect(int(obj.x), int(obj.y), int(
         obj.size), int(obj.size), obj.color)
 
 
@@ -645,10 +620,8 @@ def move_generic(obj: Player | Obstacle, direction: int | float, dt: float, glob
         obj (Player | Obstacle): Elément à déplacer
         direction (int | float): Direction dans laquelle déplacer l'objet
     """
-    obj.x += cos(rad(direction)) * obj.speed * dt * \
-        global_speed * OBJECT_SPEED_MULTIPLIER
-    obj.y += sin(rad(direction)) * obj.speed * dt * \
-        global_speed * OBJECT_SPEED_MULTIPLIER
+    obj.x += cos(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
+    obj.y += sin(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
 
 
 def wait_key(key: int) -> None:
@@ -677,7 +650,7 @@ def refresh() -> None:
     """
     Efface l'écran (remplit tout par du blanc)
     """
-    k.fill_rect(0, 0, 320, 240, "white")
+    fill_rect(0, 0, 320, 240, "white")
 
 
 def limite_plancher(nombre: int, limite: int = 0) -> int:
