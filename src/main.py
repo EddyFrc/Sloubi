@@ -355,9 +355,11 @@ class Game:
         key_y = int(keydown(KEY_DOWN)) - int(keydown(KEY_UP))  # Idem
         if not (key_x == 0 and key_y == 0):
             if key_x == 0:
-                move_generic(self.player, deg(asin(key_y)), self.dt, self.speed)
+                move_generic(self.player, deg(
+                    asin(key_y)), self.dt, self.speed)
             elif key_y == 0:
-                move_generic(self.player, deg(acos(key_x)), self.dt, self.speed)
+                move_generic(self.player, deg(
+                    acos(key_x)), self.dt, self.speed)
             elif key_y == 1:
                 move_generic(
                     self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt, self.speed)
@@ -499,7 +501,8 @@ def custom_game() -> None:
     game(
         base_player_x_pos=BASE_PLAYER_X_POS,
         base_player_y_pos=BASE_PLAYER_Y_POS,
-        base_player_speed=BASE_PLAYER_SPEED * speed_slider(CUSTOM_GAME_MENU[2]),
+        base_player_speed=BASE_PLAYER_SPEED *
+        speed_slider(CUSTOM_GAME_MENU[2]),
         base_player_size=ps_slider(CUSTOM_GAME_MENU[3]),
         base_player_color=BASE_PLAYER_COLOR,
         base_obstacles=BASE_OBSTACLES,
@@ -642,8 +645,10 @@ def move_generic(obj: Player | Obstacle, direction: int | float, dt: float, glob
         obj (Player | Obstacle): Elément à déplacer
         direction (int | float): Direction dans laquelle déplacer l'objet
     """
-    obj.x += cos(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
-    obj.y += sin(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
+    obj.x += cos(rad(direction)) * obj.speed * dt * \
+        global_speed * OBJECT_SPEED_MULTIPLIER
+    obj.y += sin(rad(direction)) * obj.speed * dt * \
+        global_speed * OBJECT_SPEED_MULTIPLIER
 
 
 def wait_key(key: int) -> None:
