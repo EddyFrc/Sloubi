@@ -178,17 +178,23 @@ class Button(SelectableNode):
         )
 
     def press(self) -> bool:
-        """Appuyer sur le bouton"""
+        """
+        Appuyer sur le bouton
+
+        Renvoie True si la cible est un autre écran, False dans tous les autres cas
+        """
 
         type_of_target = type(self.target)
 
         if type_of_target == int:
+            # La cible est un autre écran. Renvoyer True
             return True
         elif type_of_target == bool:
             self.target = not self.target
         else:
             self.target()
 
+        # Que la cible soit une fonction ou un bool, il faut renvoyer False
         return False
 
 
@@ -668,7 +674,9 @@ def layout_behaviour(layout: List[Button]) -> None:
             print_layout(layout)
             wait_key_basic(KEY_RIGHT)
 
-    if layout[current_selection_index].press:
+    if layout[current_selection_index].press():
+        # Si press renvoie True, c'est que la cible est un autre écran
+        # Il faut maintenant que l'écran actuel soit la cible du bouton
         current_screen_index = layout[current_selection_index].target
         current_selection_index = 0
     while keydown(KEY_OK):
