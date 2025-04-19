@@ -85,15 +85,21 @@ class SelectableNode(GraphicalNode):
     """
 
     def __init__(
-        self, x: int, y: int, _index: int,
-        _left: int = None, _right: int = None, _up: int = None, _down: int = None
+        self,
+        x: int,
+        y: int,
+        index: int,
+        left_node_index: int = None,
+        right_node_index: int = None,
+        above_node_index: int = None,
+        below_node_index: int = None
     ) -> None:
         super().__init__(x, y)
-        self._index = _index
-        self._left = _left
-        self._right = _right
-        self._up = _up
-        self._down = _down
+        self.index = index
+        self.left_node_index = left_node_index
+        self.right_node_index = right_node_index
+        self.above_node_index = above_node_index
+        self.below_node_index = below_node_index
 
 
 class Button(SelectableNode):
@@ -102,10 +108,20 @@ class Button(SelectableNode):
     """
 
     def __init__(
-        self, x: int, y: int, width: int, height: int, label: str, target: Union[int, bool, Callable[[], None]], _index,
-        _left: int = None, _right: int = None, _up: int = None, _down: int = None
+        self,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        label: str,
+        target: Union[int, bool, Callable[[], None]],
+        index,
+        left_node_index: int = None,
+        right_node_index: int = None,
+        above_node_index: int = None,
+        below_node_index: int = None
     ) -> None:
-        super().__init__(x, y, _index, _left, _right, _up, _down)
+        super().__init__(x, y, index, left_node_index, right_node_index, above_node_index, below_node_index)
         self.width = width
         self.height = height
         self.label = label
@@ -115,7 +131,7 @@ class Button(SelectableNode):
         """
         Afficher le bouton sur l'écran
         """
-        if current_selection_index == self._index:
+        if current_selection_index == self.index:
             # Si le curseur est positionné sur ce bouton, on affiche un contour bleu
             # supplémentaire (rectangle bleu en arrière plan)
             k.fill_rect(
@@ -173,10 +189,19 @@ class Slider(SelectableNode):
     """
 
     def __init__(
-        self, x: int, y: int, width: int, size: int, state: int, _index,
-        _left: int = None, _right: int = None, _up: int = None, _down: int = None
+        self,
+        x: int,
+        y: int,
+        width: int,
+        size: int,
+        state: int,
+        index,
+        left_node_index: int = None,
+        right_node_index: int = None,
+        above_node_index: int = None,
+        below_node_index: int = None
     ) -> None:
-        super().__init__(x, y, _index, _left, _right, _up, _down)
+        super().__init__(x, y, index, left_node_index, right_node_index, above_node_index, below_node_index)
         self.width = width  # attention length est la longueur en pixels utilisée à l'affichage
         self.size = size  # ceci est le nombre de valeurs que peut prendre la barre
         # ceci est la valeur de la barre à l'instant t (0 <= state < size)
@@ -193,7 +218,7 @@ class Slider(SelectableNode):
 
         # Si le curseur est positionné sur ce bouton, on affiche un contour supplémentaire
         # (rectangle de couleur en arrière plan)
-        if current_selection_index == self._index:
+        if current_selection_index == self.index:
             k.fill_rect(
                 DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(
                     self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)
@@ -251,13 +276,19 @@ class Label(GraphicalNode):
     """
 
     def __init__(
-        self, x: int, y: int, length: int, content: Union[str, Callable[[Slider], str]], input: Slider = None,
-        color: Union[str, tuple] = "black", background: Union[str, tuple] = "white"
+        self,
+        x: int,
+        y: int,
+        length: int,
+        content: Union[str, Callable[[Slider], str]],
+        format_source: Slider = None,
+        color: Union[str, tuple] = "black",
+        background: Union[str, tuple] = "white"
     ) -> None:
         super().__init__(x, y)
         self.length = length
         self.content = content
-        self.input = input
+        self.format_source = format_source
         self.color = color
         self.background = background
 
@@ -265,7 +296,7 @@ class Label(GraphicalNode):
         if type(self.content) == str:
             buffer = self.content
         else:
-            buffer = self.content(self.input)
+            buffer = self.content(self.format_source)
 
         y = self.y
         while len(buffer) * LETTER_WIDTH > self.length:
@@ -357,7 +388,13 @@ class Game:
     """
 
     def __init__(
-        self, player: Player, obstacles: list, difficulty: int, fps: Union[int, float], dt: float, speed: float,
+        self,
+        player: Player,
+        obstacles: list,
+        difficulty: int,
+        fps: Union[int, float],
+        dt: float,
+        speed: float,
         score: int
     ) -> None:
         # fps = rendus par secondes du thread graphique
@@ -571,16 +608,16 @@ def game_setup(**options) -> Game:
         Game: Un objet jeu correspondant aux options si elles sont précisées, sinon les options par défaut
     """
     if len(options) == 0:
-        game = create_game(**DEFAULT_OPTIONS)
+        created_game = create_game(**DEFAULT_OPTIONS)
     else:
-        game = create_game(**options)
+        created_game = create_game(**options)
 
     dif = [0, 0]
-    dif.extend(range(game.difficulty))
+    dif.extend(range(created_game.difficulty))
     for elt in dif:
-        game.obstacles.append(new_obstacle(elt + 1))
+        created_game.obstacles.append(new_obstacle(elt + 1))
 
-    return game
+    return created_game
 
 
 # UTILITAIRE
@@ -605,20 +642,20 @@ def layout_behaviour(layout: List[Button]) -> None:
     print_layout(layout)
 
     while not keydown(KEY_OK):
-        if keydown(KEY_UP) and (layout[current_selection_index]._up is not None):
-            current_selection_index = layout[current_selection_index]._up
+        if keydown(KEY_UP) and (layout[current_selection_index].above_node_index is not None):
+            current_selection_index = layout[current_selection_index].above_node_index
             print_layout(layout)
             wait_key_basic(KEY_UP)
-        if keydown(KEY_DOWN) and (layout[current_selection_index]._down is not None):
-            current_selection_index = layout[current_selection_index]._down
+        if keydown(KEY_DOWN) and (layout[current_selection_index].below_node_index is not None):
+            current_selection_index = layout[current_selection_index].below_node_index
             print_layout(layout)
             wait_key_basic(KEY_DOWN)
-        if keydown(KEY_LEFT) and (layout[current_selection_index]._left is not None):
-            current_selection_index = layout[current_selection_index]._left
+        if keydown(KEY_LEFT) and (layout[current_selection_index].left_node_index is not None):
+            current_selection_index = layout[current_selection_index].left_node_index
             print_layout(layout)
             wait_key_basic(KEY_LEFT)
-        if keydown(KEY_RIGHT) and (layout[current_selection_index]._right is not None):
-            current_selection_index = layout[current_selection_index]._right
+        if keydown(KEY_RIGHT) and (layout[current_selection_index].right_node_index is not None):
+            current_selection_index = layout[current_selection_index].right_node_index
             print_layout(layout)
             wait_key_basic(KEY_RIGHT)
 
@@ -796,7 +833,7 @@ def new_obstacle(dif: int) -> Obstacle:
     )
 
 
-def thanos(object: Union[list, Game]) -> None:
+def thanos(spider_man: Union[list, Game]) -> None:
     """L'une des plus grosses énigmes ici c'est comment ça se fait que la variable _game (ou plus généralement la
     variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose,
     rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse
@@ -804,25 +841,25 @@ def thanos(object: Union[list, Game]) -> None:
     Pourtant le garbage collector est supposé jouer son rôle, mais non. Ça me les casse :/
 
     Args:
-        object (list | Game): L'élément à supprimer
+        spider_man (list | Game): L'élément à supprimer
     """
-    if type(object) == list:
-        while len(object) > 0:
-            del object[0]
+    if type(spider_man) == list:
+        while len(spider_man) > 0:
+            del spider_man[0]
     else:
-        del object.player.x
-        del object.player.y
-        del object.player.speed
-        del object.player.size
-        del object.player
-        thanos(object.obstacles)
-        del object.obstacles
-        del object.difficulty
-        del object.base_difficulty
-        del object.fps
-        del object.dt
-        del object.score
-        del object
+        del spider_man.player.x
+        del spider_man.player.y
+        del spider_man.player.speed
+        del spider_man.player.size
+        del spider_man.player
+        thanos(spider_man.obstacles)
+        del spider_man.obstacles
+        del spider_man.difficulty
+        del spider_man.base_difficulty
+        del spider_man.fps
+        del spider_man.dt
+        del spider_man.score
+        del spider_man
 
 
 # MENUS
@@ -831,25 +868,25 @@ MAIN_MENU = [
         DEFAULT_BUTTON_CENTER, 80,
         DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Jouer", game,
-        0, _down=1
+        0, below_node_index=1
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 125,
         DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Partie personnalisée", 1,
-        1, _up=0, _down=2
+        1, above_node_index=0, below_node_index=2
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 170,
         round(DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
         "Quitter", stop,
-        2, _right=3, _up=1
+        2, right_node_index=3, above_node_index=1
     ),
     Button(
         round(SCREEN_WIDTH / 2 + 5), 170,
         round(DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
         "Infos", 2,
-        3, 2, _up=1
+        3, 2, above_node_index=1
     ),
     Label(120, 30, 320, "SLOUBI 2")
 ]
@@ -859,39 +896,39 @@ CUSTOM_GAME_MENU = [
     Slider(
         round(SCREEN_WIDTH / 2) + 4, 20, 100,
         10, 0,
-        0, _down=1
+        0, below_node_index=1
     ),
 
     # Slider vitesse du jeu
     Slider(
         round(SCREEN_WIDTH / 2) + 4, 60, 100,
         11, 4,
-        1, _up=0, _down=2
+        1, above_node_index=0, below_node_index=2
     ),
 
     # Slider vitesse du joueur
     Slider(
         round(SCREEN_WIDTH / 2) + 4, 100, 100,
         11, 4,
-        2, _up=1, _down=3
+        2, above_node_index=1, below_node_index=3
     ),
 
     # Slider taille du joueur
     Slider(
         round(SCREEN_WIDTH / 2) + 4, 140, 100,
         15, 4,
-        3, _up=2, _down=5
+        3, above_node_index=2, below_node_index=5
     ),
 
     Button(
         4, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Retour", 0,
-        4, _up=3, _right=5
+        4, above_node_index=3, right_node_index=5
     ),
     Button(
         245, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
         "Jouer", custom_game,
-        5, _up=3, _left=4
+        5, above_node_index=3, left_node_index=4
     ),
 
     Label(
@@ -937,17 +974,17 @@ INFO_MENU = [
     Button(
         DEFAULT_BUTTON_CENTER, 48, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Comment jouer", 3,
-        0, _down=1
+        0, below_node_index=1
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 93, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Crédits", 4,
-        1, _up=0, _down=2
+        1, above_node_index=0, below_node_index=2
     ),
     Button(
         DEFAULT_BUTTON_CENTER, 138, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Retour", 0,
-        2, _up=1
+        2, above_node_index=1
     )
 ]
 
