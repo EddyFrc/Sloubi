@@ -4,7 +4,7 @@ from math import acos, asin, cos, pi, sin
 from random import randint
 from threading import Thread
 from time import sleep
-from typing import Callable, Union
+from typing import Callable, List, Tuple, Union
 
 # from kandinsky import *
 import kandinsky as k
@@ -248,7 +248,7 @@ class Label(GraphicalNode):
     """
 
     def __init__(
-        self, x: int, y: int, length: int, content: Union[str, Callable[[Slider], str]], input: object = None,
+        self, x: int, y: int, length: int, content: Union[str, Callable[[Slider], str]], input: Slider = None,
         color: Union[str, tuple] = "black", background: Union[str, tuple] = "white"
     ) -> None:
         super().__init__(x, y)
@@ -316,7 +316,7 @@ class Obstacle(GameElement):
     Chaque objet de cette classe est un ennemi (= carré rouge)
     """
 
-    def __init__(self, x: float, y: float, direction: Union[int, float], speed: float, size: int, color: tuple) -> None:
+    def __init__(self, x: float, y: float, direction: Union[int, float], speed: float, size: int, color: Tuple[int, int, int]) -> None:
         super().__init__(x, y)
         self.direction = direction
         self.speed = speed
@@ -578,7 +578,7 @@ def game_setup(**options) -> Game:
 
 
 # UTILITAIRE
-def print_layout(layout: list) -> None:
+def print_layout(layout: List[Union[Button, Slider, Label]]) -> None:
     """Affichage de l'écran de boutons donné en argument. C'est un affichage seulement, pas de comportement.
 
     Args:
@@ -586,11 +586,10 @@ def print_layout(layout: list) -> None:
     """
     refresh()
     for elt in layout:
-        if isinstance(elt, GraphicalNode):
-            elt.draw()
+        elt.draw()
 
 
-def layout_behaviour(layout: list) -> None:
+def layout_behaviour(layout: List[Button]) -> None:
     """Comportement de l'écran de boutons donné en argument
 
     Args:
@@ -655,9 +654,7 @@ def print_generic_square(obj: Union[Obstacle, Player]) -> None:
         obj (Obstacle | Player): Element à afficher
     """
     k.fill_rect(
-        int(obj.x), int(obj.y), int(
-            obj.size
-        ), int(obj.size), obj.color
+        int(obj.x), int(obj.y), int(obj.size), int(obj.size), obj.color
     )
 
 
