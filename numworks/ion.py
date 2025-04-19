@@ -1,4 +1,5 @@
 from pynput import keyboard
+from threading import Thread, current_thread
 
 KEY_LEFT = 0
 KEY_UP = 1

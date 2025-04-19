@@ -1,15 +1,9 @@
-from kandinsky import draw_string
-from ion import keydown, KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_OK
-from random import randint
+from kandinsky import fill_rect
+from time import sleep
 
+for y in range(20):
+    for i in range(20):
+        fill_rect(i * 10, y * 10, 10, 10, (i * 12, 250 - i * 12, y * 12))
+        sleep(1 / 60.0)
 
-def wait_key(key):
-    while keydown(key):
-        pass
-    while not keydown(key):
-        pass
-
-
-draw_string(chr(randint(97, 122)), 0, 0, "blue", "black")
-draw_string("sloubi2", 10, 18, "green", "red")
-wait_key(KEY_OK)
+quit()
