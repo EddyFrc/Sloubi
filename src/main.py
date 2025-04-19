@@ -4,7 +4,7 @@ from math import acos, asin, cos, pi, sin
 from random import randint
 from threading import Thread
 from time import sleep
-from typing import Callable
+from typing import Callable, Union
 
 # from kandinsky import *
 import kandinsky as k
@@ -102,7 +102,7 @@ class Button(SelectableNode):
     """
 
     def __init__(
-        self, x: int, y: int, width: int, height: int, label: str, target, _index,
+        self, x: int, y: int, width: int, height: int, label: str, target: Union[int, bool, Callable[[], None]], _index,
         _left: int = None, _right: int = None, _up: int = None, _down: int = None
     ) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
@@ -248,8 +248,8 @@ class Label(GraphicalNode):
     """
 
     def __init__(
-        self, x: int, y: int, length: int, content: str | Callable[[Slider], str], input: object = None,
-        color: str | tuple = "black", background: str | tuple = "white"
+        self, x: int, y: int, length: int, content: Union[str, Callable[[Slider], str]], input: object = None,
+        color: Union[str, tuple] = "black", background: Union[str, tuple] = "white"
     ) -> None:
         super().__init__(x, y)
         self.length = length
@@ -316,7 +316,7 @@ class Obstacle(GameElement):
     Chaque objet de cette classe est un ennemi (= carré rouge)
     """
 
-    def __init__(self, x: float, y: float, direction: int | float, speed: float, size: int, color: tuple) -> None:
+    def __init__(self, x: float, y: float, direction: Union[int, float], speed: float, size: int, color: tuple) -> None:
         super().__init__(x, y)
         self.direction = direction
         self.speed = speed
@@ -352,7 +352,7 @@ class Game:
     """
 
     def __init__(
-        self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, speed: float, score: int
+        self, player: Player, obstacles: list, difficulty: int, fps: Union[int, float], dt: float, speed: float, score: int
     ) -> None:
         # fps = rendus par secondes du thread graphique
         # dt = facteur de vitesse du jeu (moteur) : normalement inversement proportionnel au nombre d'ips
@@ -648,7 +648,7 @@ def ps_slider_preview(slider: Slider) -> str:
     return str(ps_slider(slider)) + 'px'
 
 
-def print_generic_square(obj: Obstacle | Player) -> None:
+def print_generic_square(obj: Union[Obstacle, Player]) -> None:
     """Affiche l'élément (obstacle ou joueur) en argument
 
     Args:
@@ -661,7 +661,7 @@ def print_generic_square(obj: Obstacle | Player) -> None:
     )
 
 
-def move_generic(obj: Player | Obstacle, direction: int | float, dt: float, global_speed: float) -> None:
+def move_generic(obj: Union[Player, Obstacle], direction: Union[int, float], dt: float, global_speed: float) -> None:
     """Déplace l'élement en argument (obstacle ou joueur) selon sa vitesse et la direction donnée en argument
 
     Args:
@@ -731,7 +731,7 @@ def limite_plafond(nombre: int, limite: int) -> int:
     return nombre
 
 
-def rad(ang: int | float) -> float:
+def rad(ang: Union[int, float]) -> float:
     """Retourne l'équivalent en radians de l'angle en argument
 
     Args:
@@ -743,7 +743,7 @@ def rad(ang: int | float) -> float:
     return (ang * pi) / 180
 
 
-def deg(ang: int | float) -> float:
+def deg(ang: Union[int, float]) -> float:
     """Retourne l'équivalent en degrés de l'angle en argument
 
     Args:
@@ -755,7 +755,7 @@ def deg(ang: int | float) -> float:
     return (ang * 180) / pi
 
 
-def oppose_lat(ang: int | float) -> int | float:
+def oppose_lat(ang: Union[int, float]) -> Union[int, float]:
     """Retourne l'opposé latéral de l'angle en argument
 
     Args:
@@ -793,7 +793,7 @@ def new_obstacle(dif: int) -> Obstacle:
     )
 
 
-def thanos(object: list | Game) -> None:
+def thanos(object: Union[list, Game]) -> None:
     """L'une des plus grosses énigmes ici c'est comment ça se fait que la variable _game (ou plus généralement la
     variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose,
     rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse
