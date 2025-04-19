@@ -154,13 +154,16 @@ class Button(SelectableNode):
 
     def press(self) -> bool:
         """Appuyer sur le bouton"""
-        match self.target:
-            case int():
-                return True
-            case bool():
-                self.target = not self.target
-            case _:
-                self.target()
+
+        type_of_target = type(self.target)
+
+        if type_of_target == int:
+            return True
+        elif type_of_target == bool:
+            self.target = not self.target
+        else:
+            self.target()
+
         return False
 
 
@@ -316,7 +319,9 @@ class Obstacle(GameElement):
     Chaque objet de cette classe est un ennemi (= carré rouge)
     """
 
-    def __init__(self, x: float, y: float, direction: Union[int, float], speed: float, size: int, color: Tuple[int, int, int]) -> None:
+    def __init__(
+        self, x: float, y: float, direction: Union[int, float], speed: float, size: int, color: Tuple[int, int, int]
+    ) -> None:
         super().__init__(x, y)
         self.direction = direction
         self.speed = speed
@@ -352,7 +357,8 @@ class Game:
     """
 
     def __init__(
-        self, player: Player, obstacles: list, difficulty: int, fps: Union[int, float], dt: float, speed: float, score: int
+        self, player: Player, obstacles: list, difficulty: int, fps: Union[int, float], dt: float, speed: float,
+        score: int
     ) -> None:
         # fps = rendus par secondes du thread graphique
         # dt = facteur de vitesse du jeu (moteur) : normalement inversement proportionnel au nombre d'ips
@@ -616,7 +622,7 @@ def layout_behaviour(layout: List[Button]) -> None:
             print_layout(layout)
             wait_key_basic(KEY_RIGHT)
 
-    if layout[_cursor].press():
+    if layout[_cursor].press:
         _index = layout[_cursor].target
         _cursor = 0
     while keydown(KEY_OK):
