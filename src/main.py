@@ -60,13 +60,22 @@ COLOR_ENABLED = (26, 189, 12)
 LETTER_WIDTH = 10
 
 # VARIABLES GLOBALES CRITIQUES
-global global_game, is_game_running, current_selection_index, current_screen_index, is_collision_detected
-global_game = None
-is_game_running = None
-current_selection_index = None
-current_screen_index = None
-is_collision_detected = None
+global is_running, current_selection_index, current_screen_index, global_game, is_collision_detected
 
+is_running = None
+"Global : bool indiquant si le programme doit continuer"
+
+current_selection_index = None
+"Global : int indiquant la sélection du curseur dans l'écran actuel"
+
+current_screen_index = None
+"Global : int indiquant l'écran actuel (index d'un élément dans MENUS)"
+
+global_game = None
+"Objet Game global"
+
+is_collision_detected = None
+"Global : bool indiquant si une collision a eu lieu : c'est le déclencheur de fin de partie"
 
 # MENUS
 class GraphicalNode:
@@ -501,15 +510,15 @@ class Game:
 # FONCTIONS & PROCÉDURES
 # CONTAINER
 def main() -> None:
-    global current_selection_index, is_game_running, current_screen_index
-    is_game_running = True
+    global current_selection_index, is_running, current_screen_index
+    is_running = True
     current_selection_index = 0
     current_screen_index = 0
 
-    while is_game_running:
+    while is_running:
         layout_behaviour(MENUS[current_screen_index])
         if keydown(37):  # 37 correspond à la touche 5 sur la numworks
-            is_game_running = False
+            is_running = False
 
     try:
         k.quit()
@@ -535,8 +544,8 @@ def stop() -> None:
     """
     Définit le flag _running à False
     """
-    global is_game_running
-    is_game_running = False
+    global is_running
+    is_running = False
 
 
 # PARTIE
@@ -1011,7 +1020,7 @@ CREDITS = [
     ),
     Label(
         4, 4, 312,
-        "Jeu créé par Eddy F. Inspiré à l'origine par la documentation de Godot"
+        "Jeu créé par Eddy F. et inspiré par la documentation de Godot"
     ),
     Label(
         4, 76, 312,
