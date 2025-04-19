@@ -707,6 +707,8 @@ def move_generic(obj: Union[Player, Obstacle], direction: Union[int, float], dt:
     Args:
         obj (Player | Obstacle): Elément à déplacer
         direction (int | float): Direction dans laquelle déplacer l'objet
+        dt (float): Facteur "Delta Time" à appliquer
+        global_speed (float): Facteur de vitesse globale à appliquer
     """
     obj.x += cos(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
     obj.y += sin(rad(direction)) * obj.speed * dt * global_speed * OBJECT_SPEED_MULTIPLIER
