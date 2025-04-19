@@ -60,12 +60,12 @@ COLOR_ENABLED = (26, 189, 12)
 LETTER_WIDTH = 10
 
 # VARIABLES GLOBALES CRITIQUES
-global _running, _game, _cursor, _index, _collision
-_game = None
-_running = None
-_cursor = None
-_index = None
-_collision = None
+global global_game, is_game_running, current_selection_index, current_screen_index, is_collision_detected
+global_game = None
+is_game_running = None
+current_selection_index = None
+current_screen_index = None
+is_collision_detected = None
 
 
 # MENUS
@@ -115,7 +115,7 @@ class Button(SelectableNode):
         """
         Afficher le bouton sur l'écran
         """
-        if _cursor == self._index:
+        if current_selection_index == self._index:
             # Si le curseur est positionné sur ce bouton, on affiche un contour bleu
             # supplémentaire (rectangle bleu en arrière plan)
             k.fill_rect(
@@ -193,7 +193,7 @@ class Slider(SelectableNode):
 
         # Si le curseur est positionné sur ce bouton, on affiche un contour supplémentaire
         # (rectangle de couleur en arrière plan)
-        if _cursor == self._index:
+        if current_selection_index == self._index:
             k.fill_rect(
                 DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(
                     self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)
@@ -464,15 +464,15 @@ class Game:
 # FONCTIONS & PROCÉDURES
 # CONTAINER
 def main() -> None:
-    global _cursor, _running, _index
-    _running = True
-    _cursor = 0
-    _index = 0
+    global current_selection_index, is_game_running, current_screen_index
+    is_game_running = True
+    current_selection_index = 0
+    current_screen_index = 0
 
-    while _running:
-        layout_behaviour(MENUS[_index])
+    while is_game_running:
+        layout_behaviour(MENUS[current_screen_index])
         if keydown(37):  # 37 correspond à la touche 5 sur la numworks
-            _running = False
+            is_game_running = False
 
     try:
         k.quit()
@@ -481,25 +481,25 @@ def main() -> None:
 
 
 def engine_thread() -> None:
-    global _game, _collision
-    _collision = False
-    while not _game.is_colliding():
-        _game.next()
-    _collision = True
+    global global_game, is_collision_detected
+    is_collision_detected = False
+    while not global_game.is_colliding():
+        global_game.next()
+    is_collision_detected = True
 
 
 def graphic_thread() -> None:
-    global _game, _collision
-    while not _collision:
-        _game.next_image()
+    global global_game, is_collision_detected
+    while not is_collision_detected:
+        global_game.next_image()
 
 
 def stop() -> None:
     """
     Définit le flag _running à False
     """
-    global _running
-    _running = False
+    global is_game_running
+    is_game_running = False
 
 
 # PARTIE
@@ -507,12 +507,12 @@ def game(**kwargs) -> None:
     """
     Déroulement d'une unique partie
     """
-    global _game, _collision
+    global global_game, is_collision_detected
 
     if len(kwargs) == 0:
-        _game = game_setup()
+        global_game = game_setup()
     else:
-        _game = game_setup(**kwargs)
+        global_game = game_setup(**kwargs)
 
     # Boucle de jeu principale
     processing = Thread(target=engine_thread, name="EngineThread")
@@ -520,8 +520,8 @@ def game(**kwargs) -> None:
 
     graphic_thread()
 
-    _game.game_over()
-    thanos(_game)
+    global_game.game_over()
+    thanos(global_game)
 
 
 def custom_game() -> None:
@@ -601,30 +601,30 @@ def layout_behaviour(layout: List[Button]) -> None:
     Args:
         layout (list): Ecran de boutons à "faire fonctionner"
     """
-    global _cursor, _index
+    global current_selection_index, current_screen_index
     print_layout(layout)
 
     while not keydown(KEY_OK):
-        if keydown(KEY_UP) and (layout[_cursor]._up is not None):
-            _cursor = layout[_cursor]._up
+        if keydown(KEY_UP) and (layout[current_selection_index]._up is not None):
+            current_selection_index = layout[current_selection_index]._up
             print_layout(layout)
             wait_key_basic(KEY_UP)
-        if keydown(KEY_DOWN) and (layout[_cursor]._down is not None):
-            _cursor = layout[_cursor]._down
+        if keydown(KEY_DOWN) and (layout[current_selection_index]._down is not None):
+            current_selection_index = layout[current_selection_index]._down
             print_layout(layout)
             wait_key_basic(KEY_DOWN)
-        if keydown(KEY_LEFT) and (layout[_cursor]._left is not None):
-            _cursor = layout[_cursor]._left
+        if keydown(KEY_LEFT) and (layout[current_selection_index]._left is not None):
+            current_selection_index = layout[current_selection_index]._left
             print_layout(layout)
             wait_key_basic(KEY_LEFT)
-        if keydown(KEY_RIGHT) and (layout[_cursor]._right is not None):
-            _cursor = layout[_cursor]._right
+        if keydown(KEY_RIGHT) and (layout[current_selection_index]._right is not None):
+            current_selection_index = layout[current_selection_index]._right
             print_layout(layout)
             wait_key_basic(KEY_RIGHT)
 
-    if layout[_cursor].press:
-        _index = layout[_cursor].target
-        _cursor = 0
+    if layout[current_selection_index].press:
+        current_screen_index = layout[current_selection_index].target
+        current_selection_index = 0
     while keydown(KEY_OK):
         pass
 
