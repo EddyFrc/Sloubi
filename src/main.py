@@ -1,14 +1,15 @@
 #!/bin/env python
 
-from math import cos, sin, asin, acos, pi
+from math import acos, asin, cos, pi, sin
 from random import randint
-from time import sleep
 from threading import Thread
+from time import sleep
 from typing import Callable
 
-from ion import *
 # from kandinsky import *
 import kandinsky as k
+
+from ion import *
 
 # CONSTANTES
 # Pour modifier les options par défaut en partie rapide, modifier ces constantes :
@@ -66,6 +67,7 @@ _cursor = None
 _index = None
 _collision = None
 
+
 # MENUS
 class GraphicalNode:
     """
@@ -82,7 +84,10 @@ class SelectableNode(GraphicalNode):
     Element de menu qu'on sélectionne au curseur
     """
 
-    def __init__(self, x: int, y: int, _index: int, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+    def __init__(
+        self, x: int, y: int, _index: int,
+        _left: int = None, _right: int = None, _up: int = None, _down: int = None
+    ) -> None:
         super().__init__(x, y)
         self._index = _index
         self._left = _left
@@ -96,7 +101,10 @@ class Button(SelectableNode):
     Bouton simple accessible par la navigation
     """
 
-    def __init__(self, x: int, y: int, width: int, height: int, label: str, target, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+    def __init__(
+        self, x: int, y: int, width: int, height: int, label: str, target, _index,
+        _left: int = None, _right: int = None, _up: int = None, _down: int = None
+    ) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width
         self.height = height
@@ -107,7 +115,9 @@ class Button(SelectableNode):
         """
         Afficher le bouton sur l'écran
         """
-        if _cursor == self._index:  # Si le curseur est positionné sur ce bouton, on affiche un contour bleu supplémentaire (rectangle bleu en arrière plan)
+        if _cursor == self._index:
+            # Si le curseur est positionné sur ce bouton, on affiche un contour bleu
+            # supplémentaire (rectangle bleu en arrière plan)
             k.fill_rect(
                 self.x - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS,
@@ -121,6 +131,7 @@ class Button(SelectableNode):
 
         def is_target_bool():  # C'est soit ça soit deux if imbriqués au lieu d'un "and"...
             return type(self.target) == bool
+
         # And "court-circuité"
         if is_target_bool() and self.target:
             color = (29, 181, 103)
@@ -158,7 +169,10 @@ class Slider(SelectableNode):
     Barre de défilement accessible par la navigation (utilisée pour choisir la difficulté par exemple)
     """
 
-    def __init__(self, x: int, y: int, width: int, size: int, state: int, _index, _left: int = None, _right: int = None, _up: int = None, _down: int = None) -> None:
+    def __init__(
+        self, x: int, y: int, width: int, size: int, state: int, _index,
+        _left: int = None, _right: int = None, _up: int = None, _down: int = None
+    ) -> None:
         super().__init__(x, y, _index, _left, _right, _up, _down)
         self.width = width  # attention length est la longueur en pixels utilisée à l'affichage
         self.size = size  # ceci est le nombre de valeurs que peut prendre la barre
@@ -174,11 +188,13 @@ class Slider(SelectableNode):
             "gray"
         )
 
-        # Si le curseur est positionné sur ce bouton, on affiche un contour supplémentaire (rectangle de couleur en arrière plan)
+        # Si le curseur est positionné sur ce bouton, on affiche un contour supplémentaire
+        # (rectangle de couleur en arrière plan)
         if _cursor == self._index:
             k.fill_rect(
-                DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
-                    self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2) - BORDER_THICKNESS,
+                DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(
+                    self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)
+                ) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2) - BORDER_THICKNESS,
                 self.y - BORDER_THICKNESS -
                 round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
                 DEFAULT_SLIDER_HANDLE_WIDTH + 2 * BORDER_THICKNESS,
@@ -187,8 +203,9 @@ class Slider(SelectableNode):
             )
 
         k.fill_rect(
-            DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (
-                self.size - 1)) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
+            DEFAULT_SLIDER_SIDE_MARGIN + self.x + round(
+                self.state * (self.width - 2 * DEFAULT_SLIDER_SIDE_MARGIN) / (self.size - 1)
+            ) - round(DEFAULT_SLIDER_HANDLE_WIDTH / 2),
             self.y - round(DEFAULT_SLIDER_HANDLE_HEIGHT / 2),
             DEFAULT_SLIDER_HANDLE_WIDTH,
             DEFAULT_SLIDER_HANDLE_HEIGHT,
@@ -226,12 +243,14 @@ class Slider(SelectableNode):
 
 
 class Label(GraphicalNode):
-
     """
     Texte simple qui peut être affiché sur l'écran
     """
 
-    def __init__(self, x: int, y: int, length: int, content: str | Callable[[Slider], str], input: object = None, color: str | tuple = "black", background: str | tuple = "white") -> None:
+    def __init__(
+        self, x: int, y: int, length: int, content: str | Callable[[Slider], str], input: object = None,
+        color: str | tuple = "black", background: str | tuple = "white"
+    ) -> None:
         super().__init__(x, y)
         self.length = length
         self.content = content
@@ -250,8 +269,10 @@ class Label(GraphicalNode):
             index = round(self.length / LETTER_WIDTH)
             while buffer[index] != " ":
                 index -= 1
-            k.draw_string(buffer[0:index], self.x, y,
-                          self.color, self.background)
+            k.draw_string(
+                buffer[0:index], self.x, y,
+                self.color, self.background
+            )
             buffer = buffer[index + 1:]
             y += 18
 
@@ -330,7 +351,9 @@ class Game:
     Conteneur d'une partie
     """
 
-    def __init__(self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, speed: float, score: int) -> None:
+    def __init__(
+        self, player: Player, obstacles: list, difficulty: int, fps: int | float, dt: float, speed: float, score: int
+    ) -> None:
         # fps = rendus par secondes du thread graphique
         # dt = facteur de vitesse du jeu (moteur) : normalement inversement proportionnel au nombre d'ips
         self.player = player
@@ -359,11 +382,9 @@ class Game:
             elif key_y == 0:
                 move_generic(self.player, deg(acos(key_x)), self.dt, self.speed)
             elif key_y == 1:
-                move_generic(
-                    self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt, self.speed)
+                move_generic(self.player, (deg(asin(key_y)) + deg(acos(key_x))) / 2, self.dt, self.speed)
             else:
-                move_generic(
-                    self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2, self.dt, self.speed)
+                move_generic(self.player, (deg(asin(key_y)) - deg(acos(key_x))) / 2, self.dt, self.speed)
         self.player.edge_bounce_player()
 
     def print_game(self) -> None:
@@ -391,7 +412,7 @@ class Game:
         for obstacle in self.obstacles:
             for coin in [(0, 0), (0, 1), (1, 0), (1, 1)]:
                 if obstacle.x <= self.player.x + coin[0] * self.player.size <= obstacle.x + obstacle.size \
-                        and obstacle.y <= self.player.y + coin[1] * self.player.size <= obstacle.y + obstacle.size:
+                    and obstacle.y <= self.player.y + coin[1] * self.player.size <= obstacle.y + obstacle.size:
                     return True
         return False
 
@@ -427,8 +448,10 @@ class Game:
         refresh()
         k.draw_string("GAME OVER", 112, 70)
         k.draw_string("Score : " + str(round(self.score)), 105, 90)
-        k.draw_string("Difficulté initiale : " +
-                      str(self.base_difficulty), 45, 110)
+        k.draw_string(
+            "Difficulté initiale : " + str(self.base_difficulty),
+            45, 110
+        )
         wait_key(KEY_OK)
 
 
@@ -631,8 +654,11 @@ def print_generic_square(obj: Obstacle | Player) -> None:
     Args:
         obj (Obstacle | Player): Element à afficher
     """
-    k.fill_rect(int(obj.x), int(obj.y), int(
-        obj.size), int(obj.size), obj.color)
+    k.fill_rect(
+        int(obj.x), int(obj.y), int(
+            obj.size
+        ), int(obj.size), obj.color
+    )
 
 
 def move_generic(obj: Player | Obstacle, direction: int | float, dt: float, global_speed: float) -> None:
@@ -768,7 +794,11 @@ def new_obstacle(dif: int) -> Obstacle:
 
 
 def thanos(object: list | Game) -> None:
-    """L'une des plus grosses énigmes ici c'est comment ça se fait que la variable _game (ou plus généralement la variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose, rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse qui prend beaucoup trop de place dans le stockage de la calculatrice (sachant que chaque caractère compte). Pourtant le garbage collector est supposé jouer son rôle, mais non. Ça pète les couilles :/
+    """L'une des plus grosses énigmes ici c'est comment ça se fait que la variable _game (ou plus généralement la
+    variable qui contient l'objet Game) semble référencer toujours le même objet (même en l'assignant à autre chose,
+    rien à faire). C'est à cause de ce comportement que je suis semble-t-il obligé de faire cette procédure affreuse
+    qui prend beaucoup trop de place dans le stockage de la calculatrice (sachant que chaque caractère compte).
+    Pourtant le garbage collector est supposé jouer son rôle, mais non. Ça me les casse :/
 
     Args:
         object (list | Game): L'élément à supprimer
@@ -795,30 +825,30 @@ def thanos(object: list | Game) -> None:
 # MENUS
 MAIN_MENU = [
     Button(
-        DEFAULT_BUTTON_CENTER, 80, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
+        DEFAULT_BUTTON_CENTER, 80,
+        DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Jouer", game,
         0, _down=1
     ),
     Button(
-        DEFAULT_BUTTON_CENTER, 125, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
+        DEFAULT_BUTTON_CENTER, 125,
+        DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT,
         "Partie personnalisée", 1,
         1, _up=0, _down=2
     ),
     Button(
-        DEFAULT_BUTTON_CENTER, 170, round(
-            DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
+        DEFAULT_BUTTON_CENTER, 170,
+        round(DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
         "Quitter", stop,
         2, _right=3, _up=1
     ),
     Button(
-        round(SCREEN_WIDTH / 2 + 5), 170, round(DEFAULT_BUTTON_WIDTH /
-                                                2 - 5), DEFAULT_BUTTON_HEIGHT,
+        round(SCREEN_WIDTH / 2 + 5), 170,
+        round(DEFAULT_BUTTON_WIDTH / 2 - 5), DEFAULT_BUTTON_HEIGHT,
         "Infos", 2,
         3, 2, _up=1
     ),
-    Label(
-        120, 30, 320, "SLOUBI 2"
-    )
+    Label(120, 30, 320, "SLOUBI 2")
 ]
 
 CUSTOM_GAME_MENU = [
@@ -849,7 +879,6 @@ CUSTOM_GAME_MENU = [
         15, 4,
         3, _up=2, _down=5
     ),
-
 
     Button(
         4, SCREEN_HEIGHT - DEFAULT_BUTTON_HEIGHT - 4, 70, DEFAULT_BUTTON_HEIGHT,
@@ -927,7 +956,8 @@ HOW_TO_PLAY = [
     ),
     Label(
         4, 4, 312,
-        "Vous dirigez un petit carré. Le but est d'éviter les autres carrés (oranges, rouges et jaunes) qui bougent sur l'écran. Les seules commandes sont les flèches directionnelles avec lesquelles vous déplacez le carré."
+        "Vous dirigez un petit carré. Le but est d'éviter les autres carrés (oranges, rouges et jaunes) qui bougent "
+        "sur l'écran. Les seules commandes sont les flèches directionnelles avec lesquelles vous déplacez le carré."
     )
 ]
 
