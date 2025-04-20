@@ -50,105 +50,104 @@ Y=26,189,12
 Z=10
 global b,c,d,e,f
 class CA:
-	def __init__(self,x,y):self.x=x;self.y=y
+	def __init__(_,x,y):_.x=x;_.y=y
 class CB(CA):
-	def __init__(self,x,y,g,i=_A,j=_A,l=_A,m=_A):super().__init__(x,y);self.g=g;self.i=i;self.j=j;self.l=l;self.m=m
+	def __init__(_,x,y,g,i=_A,j=_A,l=_A,m=_A):super().__init__(x,y);_.g=g;_.i=i;_.j=j;_.l=l;_.m=m
 class CC(CB):
-	def __init__(self,x,y,n,r,s,o,g,i=_A,j=_A,l=_A,m=_A):super().__init__(x,y,g,i,j,l,m);self.n=n;self.r=r;self.s=s;self.o=o
-	def draw(self):
-		if d==self.g:k.fill_rect(self.x-R,self.y-R,self.n+2*R,self.r+2*R,(29,98,181))
+	def __init__(_,x,y,n,r,s,o,g,i=_A,j=_A,l=_A,m=_A):super().__init__(x,y,g,i,j,l,m);_.n=n;_.r=r;_.s=s;_.o=o
+	def draw(_):
+		if d==_.g:k.fill_rect(_.x-R,_.y-R,_.n+2*R,_.r+2*R,(29,98,181))
 		v=_F
-		def is_target_bool():return type(self.o)==bool
-		if is_target_bool()and self.o:v=29,181,103
-		k.fill_rect(self.x,self.y,self.n,self.r,v);k.draw_string(self.s,round(self.x+.5*self.n-5*len(self.s)),round(self.y+.5*self.r-9),_C,_F)
-	def press(self):
-		type_of_target=type(self.o)
+		def is_target_bool():return type(_.o)==bool
+		if is_target_bool()and _.o:v=29,181,103
+		k.fill_rect(_.x,_.y,_.n,_.r,v);k.draw_string(_.s,round(_.x+.5*_.n-5*len(_.s)),round(_.y+.5*_.r-9),_C,_F)
+	def press(_):
+		type_of_target=type(_.o)
 		if type_of_target==int:return _D
-		elif type_of_target==bool:self.o=not self.o
-		else:self.o()
+		elif type_of_target==bool:_.o=not _.o
+		else:_.o()
 		return _B
 class CD(CB):
-	def __init__(self,x,y,n,h,q,g,i=_A,j=_A,l=_A,m=_A):super().__init__(x,y,g,i,j,l,m);self.n=n;self.h=h;self.q=q
-	def draw(self,handle_color=X):
-		k.fill_rect(self.x,self.y-round(U/2),self.n,U,_F)
-		if d==self.g:k.fill_rect(V+self.x+round(self.q*(self.n-2*V)/(self.h-1))-round(S/2)-R,self.y-R-round(T/2),S+2*R,T+2*R,handle_color)
-		k.fill_rect(V+self.x+round(self.q*(self.n-2*V)/(self.h-1))-round(S/2),self.y-round(T/2),S,T,(127,127,127))
-	def t(self,handle_color):k.fill_rect(self.x,self.y-R-round(T/2),self.n,T+2*R,_C);self.draw(handle_color)
-	def press(self):
-		self.t(Y)
+	def __init__(_,x,y,n,h,q,g,i=_A,j=_A,l=_A,m=_A):super().__init__(x,y,g,i,j,l,m);_.n=n;_.h=h;_.q=q
+	def draw(_,handle_color=X):
+		k.fill_rect(_.x,_.y-round(U/2),_.n,U,_F)
+		if d==_.g:k.fill_rect(V+_.x+round(_.q*(_.n-2*V)/(_.h-1))-round(S/2)-R,_.y-R-round(T/2),S+2*R,T+2*R,handle_color)
+		k.fill_rect(V+_.x+round(_.q*(_.n-2*V)/(_.h-1))-round(S/2),_.y-round(T/2),S,T,(127,127,127))
+	def t(_,handle_color):k.fill_rect(_.x,_.y-R-round(T/2),_.n,T+2*R,_C);_.draw(handle_color)
+	def press(_):
+		_.t(Y)
 		while keydown(KEY_OK):0
 		while not keydown(KEY_OK):
-			if keydown(KEY_LEFT)and self.q>0:self.q-=1;self.t(Y);wait_key_basic(KEY_LEFT)
-			if keydown(KEY_RIGHT)and self.q<self.h-1:self.q+=1;self.t(Y);wait_key_basic(KEY_RIGHT)
+			if keydown(KEY_LEFT)and _.q>0:_.q-=1;_.t(Y);wait_key_basic(KEY_LEFT)
+			if keydown(KEY_RIGHT)and _.q<_.h-1:_.q+=1;_.t(Y);wait_key_basic(KEY_RIGHT)
 		while keydown(KEY_OK):0
 class CE(CA):
-	def __init__(self,x,y,length,content,format_source=_A,v='black',background=_C):super().__init__(x,y);self.length=length;self.content=content;self.format_source=format_source;self.v=v;self.background=background
-	def draw(self):
-		if type(self.content)==str:buffer=self.content
-		else:buffer=self.content(self.format_source)
-		y=self.y
-		while len(buffer)*Z>self.length:
-			g=round(self.length/Z)
+	def __init__(_,x,y,length,content,format_source=_A,v='black',background=_C):super().__init__(x,y);_.length=length;_.content=content;_.format_source=format_source;_.v=v;_.background=background
+	def draw(_):
+		if type(_.content)==str:buffer=_.content
+		else:buffer=_.content(_.format_source)
+		y=_.y
+		while len(buffer)*Z>_.length:
+			g=round(_.length/Z)
 			while buffer[g]!=' ':g-=1
-			k.draw_string(buffer[0:g],self.x,y,self.v,self.background);buffer=buffer[g+1:];y+=18
-		k.draw_string(buffer,self.x,y,self.v,self.background)
+			k.draw_string(buffer[0:g],_.x,y,_.v,_.background);buffer=buffer[g+1:];y+=18
+		k.draw_string(buffer,_.x,y,_.v,_.background)
 class CF:
-	def __init__(self,x,y):self.x=x;self.y=y
+	def __init__(_,x,y):_.x=x;_.y=y
 class Player(CF):
-	def __init__(self,x,y,p,h,v):super().__init__(x,y);self.p=p;self.h=h;self.v=v
-	def edge_bounce_player(self):
-		if self.x+self.h>M:self.x=M-self.h
-		if self.x<0:self.x=0
-		if self.y+self.h>N:self.y=N-self.h
-		if self.y<0:self.y=0
+	def __init__(_,x,y,p,h,v):super().__init__(x,y);_.p=p;_.h=h;_.v=v
+	def edge_bounce_player(_):
+		if _.x+_.h>M:_.x=M-_.h
+		if _.x<0:_.x=0
+		if _.y+_.h>N:_.y=N-_.h
+		if _.y<0:_.y=0
 class CG(CF):
-	def __init__(self,x,y,direction,p,h,v):super().__init__(x,y);self.direction=direction;self.p=p;self.h=h;self.v=v
-	def edge(self):
-		if self.x+self.h>=M or self.x<=0:
-			self.direction=oppose_lat(self.direction)
-			if self.x<0:self.x=0
-			elif self.x+self.h>M:self.x=M-self.h
-		elif self.y+self.h>=N or self.y<=0:
-			self.direction=-self.direction
-			if self.y<0:self.y=0
-			elif self.y+self.h>N:self.y=N-self.h
+	def __init__(_,x,y,direction,p,h,v):super().__init__(x,y);_.direction=direction;_.p=p;_.h=h;_.v=v
+	def edge(_):
+		if _.x+_.h>=M or _.x<=0:
+			_.direction=oppose_lat(_.direction)
+			if _.x<0:_.x=0
+			elif _.x+_.h>M:_.x=M-_.h
+		elif _.y+_.h>=N or _.y<=0:
+			_.direction=-_.direction
+			if _.y<0:_.y=0
+			elif _.y+_.h>N:_.y=N-_.h
 class CH:
-	def __init__(self,w,obstacles,difficulty,fps,dt,p,score):self.w=w;self.obstacles=obstacles;self.difficulty=difficulty;self.agficulty=difficulty;self.fps=fps;self.dt=dt;self.p=p;self.score=score
-	def move_game(self):
-		for z in self.obstacles:move_generic(z,z.direction,self.dt,self.p)
+	def __init__(_,w,obstacles,difficulty,fps,dt,p,score):_.w=w;_.obstacles=obstacles;_.difficulty=difficulty;_.ma=difficulty;_.fps=fps;_.dt=dt;_.p=p;_.score=score
+	def move_game(_):
+		for z in _.obstacles:move_generic(z,z.direction,_.dt,_.p)
 		key_x=int(keydown(KEY_RIGHT))-int(keydown(KEY_LEFT));key_y=int(keydown(KEY_DOWN))-int(keydown(KEY_UP))
 		if not(key_x==0 and key_y==0):
-			if key_x==0:move_generic(self.w,deg(asin(key_y)),self.dt,self.p)
-			elif key_y==0:move_generic(self.w,deg(acos(key_x)),self.dt,self.p)
-			elif key_y==1:move_generic(self.w,(deg(asin(key_y))+deg(acos(key_x)))/2,self.dt,self.p)
-			else:move_generic(self.w,(deg(asin(key_y))-deg(acos(key_x)))/2,self.dt,self.p)
-		self.w.edge_bounce_player()
-	def print_game(self):
-		k.draw_string(_R+str(round(self.score)),0,0)
-		for z in self.obstacles:print_generic_square(z)
-		print_generic_square(self.w)
-	def edge_bounce_game(self):
-		for z in self.obstacles:z.edge()
-	def is_colliding(self):
-		for z in self.obstacles:
+			if key_x==0:move_generic(_.w,deg(asin(key_y)),_.dt,_.p)
+			elif key_y==0:move_generic(_.w,deg(acos(key_x)),_.dt,_.p)
+			elif key_y==1:move_generic(_.w,(deg(asin(key_y))+deg(acos(key_x)))/2,_.dt,_.p)
+			else:move_generic(_.w,(deg(asin(key_y))-deg(acos(key_x)))/2,_.dt,_.p)
+		_.w.edge_bounce_player()
+	def print_game(_):
+		k.draw_string(_R+str(round(_.score)),0,0)
+		for z in _.obstacles:print_generic_square(z)
+		print_generic_square(_.w)
+	def edge_bounce_game(_):
+		for z in _.obstacles:z.edge()
+	def is_colliding(_):
+		for z in _.obstacles:
 			for coin in[(0,0),(0,1),(1,0),(1,1)]:
-				if z.x<=self.w.x+coin[0]*self.w.h<=z.x+z.h and z.y<=self.w.y+coin[1]*self.w.h<=z.y+z.h:return _D
+				if z.x<=_.w.x+coin[0]*_.w.h<=z.x+z.h and z.y<=_.w.y+coin[1]*_.w.h<=z.y+z.h:return _D
 		return _B
-	def next(self):
-		self.edge_bounce_game();self.move_game();self.score+=self.dt*30
-		if self.score/self.difficulty>240:self.difficulty+=1;self.obstacles.append(new_obstacle(self.difficulty+1))
-		sleep(self.dt)
-	def next_image(self):
-		t();self.print_game()
-		sleep(1/self.fps)
-	def game_over(self):t();k.draw_string('GAME OVER',112,70);k.draw_string(_R+str(round(self.score)),105,90);k.draw_string('Difficulté initiale : '+str(self.agficulty),45,110);wait_key(KEY_OK)
+	def next(_):
+		_.edge_bounce_game();_.move_game();_.score+=_.dt*30
+		if _.score/_.difficulty>240:_.difficulty+=1;_.obstacles.append(new_obstacle(_.difficulty+1))
+		sleep(_.dt)
+	def next_image(_):
+		t();_.print_game()
+		sleep(1/_.fps)
+	def game_over(_):t();k.draw_string('GAME OVER',112,70);k.draw_string(_R+str(round(_.score)),105,90);k.draw_string('Difficulté initiale : '+str(_.ma),45,110);wait_key(KEY_OK)
 def main():
 	global d,b,c;b=_D;d=0;c=0
 	while b:
 		layout_behaviour(MZ[c])
 		if keydown(37):b=_B
-	try:k.quit()
-	except Exception:pass
+	k.quit()
 def game_loop():
 	global e,f;f=_B
 	while not e.is_colliding():e.next();e.next_image()
@@ -213,7 +212,7 @@ def new_obstacle(dif):
 def thanos(a):
 	if type(a)==list:
 		while len(a)>0:del a[0]
-	else:del a.w.x;del a.w.y;del a.w.p;del a.w.h;del a.w;thanos(a.obstacles);del a.obstacles;del a.difficulty;del a.agficulty;del a.fps;del a.dt;del a.score;del a
+	else:del a.w.x;del a.w.y;del a.w.p;del a.w.h;del a.w;thanos(a.obstacles);del a.obstacles;del a.difficulty;del a.ma;del a.fps;del a.dt;del a.score;del a
 MA=[CC(Q,80,O,P,'Jouer',game,0,m=1),CC(Q,125,O,P,'Partie personnalisée',1,1,l=0,m=2),CC(Q,170,round(O/2-5),P,'Quitter',stop,2,
 	j=3,l=1),CC(round(M/2+5),170,round(O/2-5),P,'Infos',2,3,2,l=1),CE(120,30,320,'SLOUBI 2')]
 MB=[CD(round(M/2)+4,20,100,10,0,0,m=1),CD(round(M/2)+4,60,100,11,4,1,l=0,m=2),CD(round(M/2)+4,100,100,11,4,2,
