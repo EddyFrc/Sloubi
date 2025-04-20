@@ -59,24 +59,6 @@ COLOR_ENABLED = (26, 189, 12)
 
 LETTER_WIDTH = 10
 
-# VARIABLES GLOBALES CRITIQUES
-global is_running, current_selection_index, current_screen_index, global_game, is_collision_detected
-
-is_running = None
-"Global : bool indiquant si le programme doit continuer"
-
-current_selection_index = None
-"Global : int indiquant la sélection du curseur dans l'écran actuel"
-
-current_screen_index = None
-"Global : int indiquant l'écran actuel (index d'un élément dans MENUS)"
-
-global_game = None
-"Objet Game global"
-
-is_collision_detected = None
-"Global : bool indiquant si une collision a eu lieu : c'est le déclencheur de fin de partie"
-
 # MENUS
 class GraphicalNode:
     """
