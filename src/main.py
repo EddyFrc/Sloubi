@@ -2,7 +2,6 @@
 
 from math import acos, asin, cos, pi, sin
 from random import randint
-from threading import Thread
 from time import sleep
 from typing import Callable, List, Tuple, Union
 
@@ -52,12 +51,14 @@ DEFAULT_SLIDER_HANDLE_HEIGHT = 20
 DEFAULT_SLIDER_HEIGHT = 10
 DEFAULT_SLIDER_SIDE_MARGIN = 10
 
-OBJECT_SPEED_MULTIPLIER = 50.0
+OBJECT_SPEED_MULTIPLIER = 150.0
 
 COLOR_SELECTED = (29, 98, 181)
 COLOR_ENABLED = (26, 189, 12)
 
 LETTER_WIDTH = 10
+
+global is_running, current_screen_index, current_selection_index, global_game, is_collision_detected
 
 # MENUS
 class GraphicalNode:
@@ -514,18 +515,13 @@ def main() -> None:
         pass
 
 
-def engine_thread() -> None:
+def game_loop() -> None:
     global global_game, is_collision_detected
     is_collision_detected = False
     while not global_game.is_colliding():
         global_game.next()
-    is_collision_detected = True
-
-
-def graphic_thread() -> None:
-    global global_game, is_collision_detected
-    while not is_collision_detected:
         global_game.next_image()
+    is_collision_detected = True
 
 
 def stop() -> None:
@@ -549,10 +545,7 @@ def game(**kwargs) -> None:
         global_game = game_setup(**kwargs)
 
     # Boucle de jeu principale
-    processing = Thread(target=engine_thread, name="EngineThread")
-    processing.start()
-
-    graphic_thread()
+    game_loop()
 
     global_game.game_over()
     thanos(global_game)
