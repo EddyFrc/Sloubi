@@ -3,8 +3,8 @@
 # Ce script permet de générer des versions minifiées du fichier principal.
 # Ces versions sont plus adaptées pour la calculatrice numworks étant donné son faible stockage.
 
-MAIN_EXE=./src/main.py
-OUTPUT_DIR=./numworks
+MAIN_EXE=../src/main.py
+OUTPUT_DIR=../numworks
 
 echo "Attention à se mettre dans le bon répertoire avant d'effectuer cette commande. La création de la version numworks va débuter."
 
