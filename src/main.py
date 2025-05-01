@@ -1,11 +1,13 @@
 #!/bin/env python
+from os import environ
+
+environ['KANDINSKY_ZOOM_RATIO'] = '2'
 
 from math import acos, asin, cos, pi, sin
 from random import randint
 from time import sleep
 from typing import Callable, List, Tuple, Union
 
-# from kandinsky import *
 import kandinsky as k
 
 from ion import *
