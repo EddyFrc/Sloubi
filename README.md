@@ -16,7 +16,7 @@ Téléchargez l'exécutable depuis <a>https://github.com/EddyFrc/Sloubi/releases
 
 Il est possible de faire tourner le jeu sans "l'empaqueter" en exécutable, simplement en exécutant `src/main.py` avec l'interpréteur Python, après avoir installé toutes les dépendances. Pour cela, clonez le projet avec `git`. L'interpréteur et les dépendances ne sont pas fournies.
 
-# Structure
+## Structure
 
 * `src` : L'intégralité du code source se trouve dans `src/main.py`
 * `numworks` : Fichiers minifiés générés à partir de différents algorithmes, dont certains modifiés à la main après coup
@@ -24,7 +24,7 @@ Il est possible de faire tourner le jeu sans "l'empaqueter" en exécutable, simp
 * `scripts` : Scripts utilitaires écrits en différents shells permettant de générer des exécutables ou des versions minifiées<br>
   Note : Il peut être nécessaire de créer le dossier `build_win` avant de générer un exécutable pour Windows.
 
-## Dépendances
+### Dépendances
 
 Nom du paquet      | Lien                                             | Facultatif | Notes
 -------------------|--------------------------------------------------|------------|-----------------------------
@@ -32,7 +32,7 @@ Nom du paquet      | Lien                                             | Facultat
 `kandinsky`        | <a>https://pypi.org/project/kandinsky</a>        | Non        | Affichage du jeu (interface)
 `win-precise-time` | <a>https://pypi.org/project/win-precise-time</a> | Oui        | Uniquement sur Windows
 
-# Si vous êtes développeur
+## Si vous êtes développeur
 
 Pour construire un exécutable, utilisez pyinstaller ou similaire (pour les scripts, attention à bien remplacer les chemins, cela fonctionne uniquement pour moi). Attention cependant, il faut rajouter toutes les dépendances non-incluses ici. Si vous ne voulez pas vous embêter, il y a toujours les releases (à l'heure où j'écris, la version PC est uniquement pour Windows). Celles-ci regroupent deux fichiers :
 
